@@ -251,7 +251,6 @@ async function sendSetupOTP(email, smtpConfig) {
     return { sent: false, error: err.message };
   }
 }
-}
 
 function verifyOTP(email, code) {
   const record = otpStore.get(email);
