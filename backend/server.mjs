@@ -189,6 +189,44 @@ async function sendSetupOTP(email, smtpConfig) {
   const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes
   otpStore.set(email, { code, expiresAt, smtpConfig });
   
+  const html = `<div style="font-family:system-ui,sans-serif;max-width:400px;margin:40px auto;padding:40px;text-align:center;">
+    <div style="display:inline-block;background:linear-gradient(135deg,#6366f1,#4f46e5);color:white;font-size:20px;font-weight:800;padding:10px 20px;border-radius:10px;margin-bottom:24px;">VY</div>
+    <h2 style="color:#111827;margin:0 0 12px;">Verify Your Email</h2>
+    <p style="color:#6b7280;margin:0 0 24px;">Enter this 6-digit code to verify your email address:</p>
+    <div style="font-size:36px;font-weight:800;letter-spacing:12px;color:#6366f1;font-family:monospace;background:#f3f4f6;padding:16px;border-radius:12px;">${code}</div>
+    <p style="color:#9ca3af;font-size:12px;margin-top:24px;">This code expires in 10 minutes.</p>
+  </div>`;
+
+  // Option 1: SendGrid API (works on Render — uses HTTPS, not SMTP)
+  const sendgridKey = process.env.SENDGRID_API_KEY;
+  if (sendgridKey) {
+    try {
+      const response = await fetch('https://api.sendgrid.com/v3/mail/send', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${sendgridKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          personalizations: [{ to: [{ email }] }],
+          from: { email: smtpConfig.smtp_from_email || smtpConfig.smtp_user || email, name: smtpConfig.smtp_from_name || 'VY Group' },
+          subject: 'VY Group Vendor Console - Email Verification OTP',
+          content: [{ type: 'text/html', value: html }]
+        })
+      });
+      if (response.ok || response.status === 202) {
+        console.log('[OTP] Sent via SendGrid API');
+        return { sent: true };
+      }
+      const err = await response.text();
+      console.error('[OTP] SendGrid error:', response.status, err);
+      // Fall through to SMTP
+    } catch (e) {
+      console.error('[OTP] SendGrid fetch error:', e.message);
+    }
+  }
+
+  // Option 2: Direct SMTP (may be blocked on Render free tier)
   try {
     const nodemailer = await import('nodemailer');
     const transporter = nodemailer.default.createTransport({
@@ -204,20 +242,15 @@ async function sendSetupOTP(email, smtpConfig) {
       from: `"VY Group" <${smtpConfig.smtp_from_email || smtpConfig.smtp_user}>`,
       to: email,
       subject: 'VY Group Vendor Console - Email Verification OTP',
-      html: `<div style="font-family:system-ui,sans-serif;max-width:400px;margin:40px auto;padding:40px;text-align:center;">
-        <div style="display:inline-block;background:linear-gradient(135deg,#6366f1,#4f46e5);color:white;font-size:20px;font-weight:800;padding:10px 20px;border-radius:10px;margin-bottom:24px;">VY</div>
-        <h2 style="color:#111827;margin:0 0 12px;">Verify Your Email</h2>
-        <p style="color:#6b7280;margin:0 0 24px;">Enter this 6-digit code to verify your email address:</p>
-        <div style="font-size:36px;font-weight:800;letter-spacing:12px;color:#6366f1;font-family:monospace;background:#f3f4f6;padding:16px;border-radius:12px;">${code}</div>
-        <p style="color:#9ca3af;font-size:12px;margin-top:24px;">This code expires in 10 minutes.</p>
-      </div>`
+      html
     });
     
     return { sent: true };
   } catch (err) {
-    console.error('[OTP] Failed to send:', err.message);
+    console.error('[OTP] SMTP send failed:', err.message);
     return { sent: false, error: err.message };
   }
+}
 }
 
 function verifyOTP(email, code) {

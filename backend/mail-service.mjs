@@ -82,6 +82,35 @@ async function getTransporter() {
 }
 
 export async function sendMail({ to, subject, html, text }) {
+  // Option 1: SendGrid API (works on Render)
+  const sendgridKey = process.env.SENDGRID_API_KEY;
+  if (sendgridKey) {
+    try {
+      const response = await fetch('https://api.sendgrid.com/v3/mail/send', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${sendgridKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          personalizations: [{ to: [{ email: to }] }],
+          from: { email: 'noreply@vygroups.co.in', name: 'VY Group' },
+          subject,
+          content: [{ type: 'text/html', value: html || text || '' }]
+        })
+      });
+      if (response.ok || response.status === 202) {
+        console.log('[MAIL] Sent via SendGrid API');
+        return { sent: true, configured: true, via: 'sendgrid' };
+      }
+      const err = await response.text();
+      console.error('[MAIL] SendGrid error:', response.status, err);
+    } catch (e) {
+      console.error('[MAIL] SendGrid fetch error:', e.message);
+    }
+  }
+
+  // Option 2: Direct SMTP
   const config = await getMailConfig();
   if (!config.is_active || !config.smtp_host) {
     return { sent: false, error: 'SMTP not configured', configured: false };
