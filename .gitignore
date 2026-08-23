@@ -1,0 +1,10 @@
+# Never commit secrets
+backend/.env
+backend/data/
+node_modules/
+*.log
+.DS_Store
+frontend/app.js.backup
+data/operators.json
+data/mail-config.json
+data/master-key.key

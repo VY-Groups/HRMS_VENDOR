@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vendor License Tool - Architecture Diagram</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0a0a1a; color: #e0e0e0; padding: 20px; }
+        h1 { text-align: center; color: #00d4ff; margin-bottom: 10px; font-size: 28px; }
+        h2 { color: #00d4ff; margin: 30px 0 15px; border-bottom: 2px solid #00d4ff; padding-bottom: 5px; }
+        .subtitle { text-align: center; color: #888; margin-bottom: 30px; font-size: 14px; }
+        .diagram-container { background: #111; border: 1px solid #333; border-radius: 10px; padding: 20px; margin: 20px 0; overflow-x: auto; }
+        .mermaid { display: flex; justify-content: center; }
+        .mermaid svg { max-width: 100%; }
+        .section { background: #1a1a2e; border: 1px solid #333; border-radius: 10px; padding: 20px; margin: 20px 0; }
+        .section h3 { color: #00d4ff; margin-bottom: 15px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; }
+        .card { background: #16213e; border: 1px solid #0f3460; border-radius: 8px; padding: 15px; }
+        .card h4 { color: #00d4ff; margin-bottom: 8px; font-size: 14px; }
+        .card p { color: #aaa; font-size: 12px; line-height: 1.5; }
+        .flow { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 10px; margin: 15px 0; }
+        .flow-box { background: #0f3460; border: 2px solid #00d4ff; border-radius: 8px; padding: 12px 18px; text-align: center; min-width: 120px; }
+        .flow-box .label { font-size: 12px; color: #00d4ff; font-weight: bold; }
+        .flow-box .desc { font-size: 10px; color: #aaa; margin-top: 4px; }
+        .arrow { color: #00d4ff; font-size: 24px; }
+        .security { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+        .security-item { background: #1a1a2e; border: 1px solid #e94560; border-radius: 8px; padding: 12px; text-align: center; }
+        .security-item .icon { font-size: 28px; margin-bottom: 5px; }
+        .security-item .name { color: #e94560; font-weight: bold; font-size: 12px; }
+        .security-item .detail { color: #aaa; font-size: 10px; margin-top: 4px; }
+        @media (max-width: 768px) { .security { grid-template-columns: repeat(2, 1fr); } }
+    </style>
+</head>
+<body>
+
+<h1>VENDOR LICENSE TOOL</h1>
+<p class="subtitle">Complete Architecture & Workflow Diagram</p>
+
+<!-- Main Architecture -->
+<div class="section">
+    <h3>1. System Architecture</h3>
+    <div class="diagram-container">
+        <div class="mermaid">
+graph TB
+    subgraph FRONTEND["FRONTEND SPA (port 8787)"]
+        UI["Vendor Console<br/>app-v2.js"]
+    end
+
+    subgraph BACKEND["BACKEND SERVER (port 3005)"]
+        MW["Middleware<br/>Rate Limit + Auth"]
+        API["API Routes<br/>300+ endpoints"]
+        AUTH["auth-service<br/>Operators & Sessions"]
+        CUST["customer-store<br/>Customers & Licenses"]
+        LIC["license-service<br/>AES-256-GCM"]
+        CRL["crl-service<br/>HMAC-SHA256"]
+        BACKUP["github-backup<br/>Per-Vendor Isolation"]
+        WS["websocket-relay<br/>Real-time Updates"]
+        SEC["secure-config<br/>Bootstrap Key"]
+    end
+
+    subgraph DATA["DATA LAYER (JSON Files)"]
+        OPS["operators.json<br/>Hashed + Encrypted"]
+        CUSTDATA["customers.json<br/>License Keys"]
+        AUDIT["audit-log.json<br/>10k entries"]
+        CRLDATA["crl/vendor-{id}.json<br/>Signed CRL"]
+    end
+
+    subgraph EXTERNAL["EXTERNAL SERVICES"]
+        GH["GitHub<br/>VY-Groups/HRMS-Release-Management"]
+    end
+
+    subgraph HRMS["HRMS BACKEND (Multiple Instances)"]
+        VALID["License Validator"]
+        CRLFETCH["CRL Fetcher<br/>Every 6 hours"]
+        WSCLIENT["WebSocket Client<br/>Real-time"]
+    end
+
+    UI -->|"HTTP/REST"| MW
+    MW --> API
+    API --> AUTH
+    API --> CUST
+    API --> LIC
+    API --> CRL
+    API --> BACKUP
+    API --> WS
+
+    AUTH --> OPS
+    CUST --> CUSTDATA
+    LIC --> CUSTDATA
+    CRL --> CRLDATA
+    AUTH --> SEC
+    LIC --> SEC
+    CRL --> SEC
+
+    BACKUP -->|"Push"| GH
+    CRL -->|"Publish"| GH
+    GH -->|"Fetch CRL"| CRLFETCH
+    GH -->|"Check Updates"| HRMS
+    WS -->|"Broadcast"| WSCLIENT
+    VALID -->|"Decrypt Offline"| LIC
+
+    style FRONTEND fill:#1a1a2e,stroke:#00d4ff,color:#fff
+    style BACKEND fill:#16213e,stroke:#00d4ff,color:#fff
+    style DATA fill:#0f3460,stroke:#00d4ff,color:#fff
+    style EXTERNAL fill:#533483,stroke:#00d4ff,color:#fff
+    style HRMS fill:#e94560,stroke:#00d4ff,color:#fff
+        </div>
+    </div>
+</div>
+
+<!-- Data Flow -->
+<div class="section">
+    <h3>2. Data Flow</h3>
+    <div class="diagram-container">
+        <div class="mermaid">
+sequenceDiagram
+    participant OP as Vendor Operator
+    participant VT as Vendor Tool
+    participant GH as GitHub
+    participant HRMS as HRMS Backend
+
+    Note over OP,HRMS: License Generation Flow
+    OP->>VT: Create Customer + Generate License
+    VT->>VT: AES-256-GCM encrypt license key
+    VT->>VT: Save to customers.json
+    VT->>GH: Backup (debounced 2s)
+    VT-->>OP: License Key (HRMS2-iv.ct.tag)
+
+    Note over OP,HRMS: License Validation (Offline)
+    HRMS->>HRMS: Decode HRMS2 key with master key
+    HRMS->>HRMS: Check expiry + hardware binding
+
+    Note over OP,HRMS: Revocation Flow
+    OP->>VT: Revoke License
+    VT->>VT: Add to CRL (HMAC signed)
+    VT->>GH: Publish CRL to GitHub
+    VT->>HRMS: WebSocket broadcast (instant)
+    HRMS->>GH: Fetch CRL (every 6h)
+    HRMS->>HRMS: Block if license_id in CRL
+
+    Note over OP,HRMS: Backup/Restore Flow
+    VT->>GH: Push: backups/{vendor_id}/
+    Note right of GH: customers.json<br/>operators.json<br/>crl.json<br/>audit.json<br/>manifest.json
+    OP->>VT: Restore from GitHub
+    VT->>GH: Pull 5 files
+    VT->>VT: Merge + decrypt passwords
+        </div>
+    </div>
+</div>
+
+<!-- Security Layers -->
+<div class="section">
+    <h3>3. Security Layers</h3>
+    <div class="security">
+        <div class="security-item">
+            <div class="icon">🔐</div>
+            <div class="name">ENCRYPTION AT REST</div>
+            <div class="detail">AES-256-GCM<br/>Tokens, Passwords, Licenses</div>
+        </div>
+        <div class="security-item">
+            <div class="icon">✅</div>
+            <div class="name">INTEGRITY</div>
+            <div class="detail">HMAC-SHA256<br/>Operator Store, CRL</div>
+        </div>
+        <div class="security-item">
+            <div class="icon">🛡️</div>
+            <div class="name">ACCESS CONTROL</div>
+            <div class="detail">Rate Limiting<br/>5 attempts / 15 min</div>
+        </div>
+        <div class="security-item">
+            <div class="icon">🔑</div>
+            <div class="name">SESSION MGMT</div>
+            <div class="detail">Token Versioning<br/>Invalidation on Change</div>
+        </div>
+        <div class="security-item">
+            <div class="icon">💾</div>
+            <div class="name">BACKUP SECURITY</div>
+            <div class="detail">Encrypted Only<br/>Per-Vendor Isolation</div>
+        </div>
+        <div class="security-item">
+            <div class="icon">⏱️</div>
+            <div class="name">TIMING-SAFE</div>
+            <div class="detail">Prevents Timing Attacks<br/>on Comparisons</div>
+        </div>
+        <div class="security-item">
+            <div class="icon">🏢</div>
+            <div class="name">MASTER PROTECT</div>
+            <div class="detail">VY-Group Cannot<br/>Delete/Suspend</div>
+        </div>
+        <div class="security-item">
+            <div class="icon">🔗</div>
+            <div class="name">BOOTSTRAP KEY</div>
+            <div class="detail">Machine-Derived<br/>Never Stored</div>
+        </div>
+    </div>
+</div>
+
+<!-- License Lifecycle -->
+<div class="section">
+    <h3>4. License Lifecycle</h3>
+    <div class="diagram-container">
+        <div class="mermaid">
+graph LR
+    A["CREATE<br/>License"] -->|"AES-256-GCM"| B["ACTIVE<br/>HRMS Validates Offline"]
+    B -->|"Extend"| C["EXTENDED<br/>New Expiry"]
+    B -->|"Revoke"| D["REVOKED<br/>CRL + WebSocket"]
+    C -->|"Revoke"| D
+    D -->|"Delete Customer"| E["CASCADE<br/>All Licenses Revoked"]
+
+    style A fill:#00d4ff,stroke:#000,color:#000
+    style B fill:#00ff88,stroke:#000,color:#000
+    style C fill:#ffaa00,stroke:#000,color:#000
+    style D fill:#ff4444,stroke:#000,color:#fff
+    style E fill:#aa00aa,stroke:#000,color:#fff
+        </div>
+    </div>
+</div>
+
+<!-- Security Architecture -->
+<div class="section">
+    <h3>5. Encryption Key Chain</h3>
+    <div class="diagram-container">
+        <div class="mermaid">
+graph TB
+    A["Bootstrap Key<br/>(Machine-Specific: hostname + container_id + MAC)"] -->|"Derives"| B["Master Key<br/>(Decrypted at Runtime, In Memory Only)"]
+    B -->|"SHA-256"| C["License Key<br/>AES-256-GCM"]
+    B -->|"PBKDF2"| D["Encryption Key<br/>AES-256-GCM"]
+    B -->|"PBKDF2"| E["Token Key<br/>AES-256-GCM"]
+    B -->|"HMAC"| F["CRL Signing<br/>HMAC-SHA256"]
+    B -->|"Direct"| G["Session Secret<br/>HMAC-SHA256"]
+
+    D -->|"Encrypts"| H["Passwords<br/>operators.json"]
+    E -->|"Encrypts"| I["GitHub Tokens<br/>.env file"]
+    D -->|"Encrypts"| J["SMTP Password<br/>.env file"]
+
+    style A fill:#e94560,stroke:#000,color:#fff
+    style B fill:#ffaa00,stroke:#000,color:#000
+    style C fill:#00ff88,stroke:#000,color:#000
+    style D fill:#00d4ff,stroke:#000,color:#000
+    style E fill:#00d4ff,stroke:#000,color:#000
+    style F fill:#00d4ff,stroke:#000,color:#000
+    style G fill:#00d4ff,stroke:#000,color:#000
+    style H fill:#533483,stroke:#000,color:#fff
+    style I fill:#533483,stroke:#000,color:#fff
+    style J fill:#533483,stroke:#000,color:#fff
+        </div>
+    </div>
+</div>
+
+<!-- Attack Resistance -->
+<div class="section">
+    <h3>6. Attack Resistance Matrix</h3>
+    <div class="grid">
+        <div class="card">
+            <h4>Stole .env File</h4>
+            <p>Tokens encrypted with master key. Need master key to decrypt and use.</p>
+        </div>
+        <div class="card">
+            <h4>Stole operators.json</h4>
+            <p>Passwords encrypted with AES-256-GCM. HMAC signature detects tampering.</p>
+        </div>
+        <div class="card">
+            <h4>Stole GitHub Backup</h4>
+            <p>All data encrypted. encrypted_password fields need master key to decrypt.</p>
+        </div>
+        <div class="card">
+            <h4>Brute Force Login</h4>
+            <p>Rate limited: 5 attempts per 15 min. 30-minute lockout after threshold.</p>
+        </div>
+        <div class="card">
+            <h4>Stolen Session Token</h4>
+            <p>Invalidated on password change via token_version increment.</p>
+        </div>
+        <div class="card">
+            <h4>Tampered Data</h4>
+            <p>HMAC-SHA256 signature on operators.json. Integrity check on load.</p>
+        </div>
+        <div class="card">
+            <h4>Timing Attack</h4>
+            <p>All password comparisons use crypto.timingSafeEqual.</p>
+        </div>
+        <div class="card">
+            <h4>Container Compromise</h4>
+            <p>Bootstrap key derived from runtime machine data, never stored on disk.</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    mermaid.initialize({
+        startOnLoad: true,
+        theme: 'dark',
+        themeVariables: {
+            primaryColor: '#0f3460',
+            primaryTextColor: '#fff',
+            primaryBorderColor: '#00d4ff',
+            lineColor: '#00d4ff',
+            secondaryColor: '#16213e',
+            tertiaryColor: '#1a1a2e',
+            fontFamily: 'Segoe UI, sans-serif'
+        },
+        flowchart: { useMaxWidth: true, htmlLabels: true, curve: 'basis' },
+        sequence: { useMaxWidth: true, actorMargin: 50, mirrorActors: false }
+    });
+</script>
+
+</body>
+</html>

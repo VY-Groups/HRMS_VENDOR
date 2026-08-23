@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Vendor Tool Diagnostic</title>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <style>
+    body { font-family: monospace; padding: 20px; background: #1e1e1e; color: #d4d4d4; }
+    h1 { color: #4ec9b0; }
+    .section { background: #252526; padding: 15px; margin: 10px 0; border-radius: 5px; }
+    .success { color: #4ec9b0; }
+    .error { color: #f48771; }
+    .warning { color: #dcdcaa; }
+    button { background: #0e639c; color: white; border: none; padding: 10px 20px; cursor: pointer; margin: 5px; }
+    button:hover { background: #1177bb; }
+    pre { background: #1e1e1e; padding: 10px; overflow-x: auto; }
+  </style>
+</head>
+<body>
+  <h1>🔧 Vendor Tool Diagnostic</h1>
+  
+  <div class="section">
+    <h2>📦 Backend Version Check</h2>
+    <button onclick="checkBackend()">Check Backend API</button>
+    <div id="backend-result"></div>
+  </div>
+  
+  <div class="section">
+    <h2>🌐 Browser Cache Info</h2>
+    <div id="cache-info">
+      <p>Current URL: <span class="warning">${window.location.href}</span></p>
+      <p>Timestamp: <span class="warning">${new Date().toISOString()}</span></p>
+      <p>Random: <span class="warning">${Math.random()}</span></p>
+    </div>
+    <button onclick="clearAndReload()">Clear Cache & Reload</button>
+    <button onclick="window.location.reload(true)">Hard Reload</button>
+  </div>
+  
+  <div class="section">
+    <h2>🔑 Session Info</h2>
+    <div id="session-info"></div>
+  </div>
+  
+  <script>
+    // Display session info
+    const token = localStorage.getItem('vendor_console_token');
+    document.getElementById('session-info').innerHTML = 
+      '<p>Token exists: <span class="' + (token ? 'success' : 'error') + '">' + (token ? 'YES' : 'NO') + '</span></p>' +
+      '<p>Token length: <span class="warning">' + (token ? token.length : 0) + '</span></p>';
+    
+    async function checkBackend() {
+      const resultDiv = document.getElementById('backend-result');
+      resultDiv.innerHTML = '<p class="warning">⏳ Checking backend...</p>';
+      
+      try {
+        const token = localStorage.getItem('vendor_console_token');
+        const response = await fetch('/api/updates/status', {
+          headers: token ? { 'Authorization': 'Bearer ' + token } : {}
+        });
+        
+        const data = await response.json();
+        
+        resultDiv.innerHTML = 
+          '<p class="success">✅ Backend Response:</p>' +
+          '<pre>' + JSON.stringify(data, null, 2) + '</pre>' +
+          '<p><strong>Current Version:</strong> <span class="' + (data.current_version === '1.1.0' ? 'success' : 'error') + '">' + data.current_version + '</span></p>' +
+          '<p><strong>Expected:</strong> <span class="success">1.1.0</span></p>' +
+          '<p><strong>Match:</strong> <span class="' + (data.current_version === '1.1.0' ? 'success' : 'error') + '">' + (data.current_version === '1.1.0' ? 'YES ✅' : 'NO ❌') + '</span></p>';
+      } catch (err) {
+        resultDiv.innerHTML = '<p class="error">❌ Error: ' + err.message + '</p>';
+      }
+    }
+    
+    function clearAndReload() {
+      if (confirm('This will:\n1. Clear localStorage\n2. Clear sessionStorage\n3. Reload the page\n\nContinue?')) {
+        localStorage.clear();
+        sessionStorage.clear();
+        window.location.href = '/index.html?nocache=' + Date.now();
+      }
+    }
+    
+    // Auto-check on load
+    setTimeout(checkBackend, 500);
+  </script>
+</body>
+</html>

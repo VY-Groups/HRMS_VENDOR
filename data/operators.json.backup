@@ -1,0 +1,14 @@
+{
+  "operators": [
+    {
+      "id": "7dbdaf29-b47a-4957-a9dc-7dc2615b03f6",
+      "full_name": "Yash Kumar Dubey",
+      "email": "ydubey020@gmail.com",
+      "role": "platform_admin",
+      "password_hash": "532be9745246af076fca143cb0fa895a:5f1709ba802f1c6d0b7dd8ecbce67c0071e3d15312b0523fe4d68ec242acbf95adf8e3f9e125d52618038d9274b3cbf58fcc923c66c04d7a8888a05452117767",
+      "created_at": "2026-04-24T15:30:50.664Z",
+      "updated_at": "2026-04-28T05:47:47.200Z",
+      "last_login_at": "2026-04-28T05:47:47.200Z"
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Version Test</title>
+</head>
+<body>
+  <h1>Vendor Tool Version Test</h1>
+  <div id="result">Loading...</div>
+  
+  <script>
+    fetch('/api/updates/status', {
+      headers: {
+        'Authorization': 'Bearer ' + localStorage.getItem('vendor_console_token')
+      }
+    })
+    .then(r => r.json())
+    .then(data => {
+      document.getElementById('result').innerHTML = `
+        <h2>API Response:</h2>
+        <pre>${JSON.stringify(data, null, 2)}</pre>
+        <h3>Current Version: ${data.current_version}</h3>
+        <h3>Latest Version: ${data.latest_version || 'N/A'}</h3>
+        <h3>Update Available: ${data.available ? 'YES' : 'NO'}</h3>
+      `;
+    })
+    .catch(err => {
+      document.getElementById('result').innerHTML = `<h2 style="color:red;">Error: ${err.message}</h2>`;
+    });
+  </script>
+</body>
+</html>

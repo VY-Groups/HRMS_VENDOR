@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: vendor-license-tool
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node backend/server.mjs
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: VENDOR_LICENSE_PORT
+        value: "3005"
+      - key: HOST
+        value: "0.0.0.0"

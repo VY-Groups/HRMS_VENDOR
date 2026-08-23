@@ -1,0 +1,67 @@
+{
+  "customers": [
+    {
+      "id": "f71c4f01-9ce9-48e4-91c3-cac057ec6cc5",
+      "legal_name": "TEST",
+      "workspace_name": "TEST",
+      "primary_contact": "TEST",
+      "contact_email": "test@gmail.com",
+      "contact_phone": "+91 0000000000",
+      "billing_contact": "test",
+      "billing_email": "test@gmail.com",
+      "plan": "poc",
+      "status": "poc",
+      "deployment_type": "on-prem",
+      "hardware_id": "",
+      "renewal_date": "2026-06-05",
+      "duration_days": 30,
+      "max_employees": 50,
+      "max_admins": 5,
+      "max_departments": 10,
+      "feature_overrides": [],
+      "notes": "this is test user",
+      "last_license_issued_at": "2026-05-06T08:59:11.826Z",
+      "created_at": "2026-05-06T07:57:20.583Z",
+      "updated_at": "2026-05-06T08:59:11.826Z",
+      "licenses": [
+        {
+          "issuance_id": "34db8891-8890-4121-a437-6e5344709401",
+          "generated_at": "2026-05-06T08:59:11.826Z",
+          "license_id": "db53d583-7937-433f-ab5e-7256cc2e1d98",
+          "license_key": "HRMS2-uBecyGysLq8H9S6E.SXJdgJ8P_8ljx9pT9eIRa1dmcxuI1CBAlwdNGKtEM20Mzywv7-axPcT8bV8ySMaSMJUs_tktpe6Nh1_Jwc-QkdpIlgIHRdhp8AbfMVUq07nuZnhQrarKgBg53rcae6_n_fuLz0oDKzcnxIJfKMUMhxS1gB16gUO68Tn4VJyWOVVH8zAYVcJtQnYAnRj4Qkzea2qdJNNCZtP0Nca4dltGbH8wg4GcqEmkAkj1Wn_jIreqHlyWLVLMW_qlIBD-ux06k6AvBE_DyCrajxtzZCy7q-6eeCdJ2251cj4izOPaxKUvbZUZDpYfRNK68bULsly8OZxi4KgjGJZZlIDDYTnPqERjqHg0dzqfSEXqd43m9HJIJ3W_wP9nmK1o-LkeI-9qKtNngbh0F4Qg86Zd-XtKL2B2QIPMcNG8dcxDwq9v4kREf5pcei_yJ9h4z5jhZnPjtFvCInLBpPe2BVfsa5QE8tm2q5rwNRpEmfSwAHnssg8RwRAQH0Hc1c-SYwYm16RZ_oQqn3YNOCbNQGuWOII8kX3bCcHpfdzwwZ-nLNNYLGl-sNcqNmROIPMfswc4NatMr5-Q70zuc7wtOLAimU7epEhDLeC_lmb0wE3OgPeIeZELk9ZmfQdYbVyvabuWZvyFlJRzXDldIQ74ez8FusnskJ-9Z3TyYXsHvgmrfcZt49mqL3Q_nLTMda8nuqAabQa6gRUejB9JZF_hlbyRHncA4dvwlWk7WQwzcxcV8xoez3Y5M3-SbSwJAslsnOWrJZblmtlzC6kn47vR2D10fihlt_PbObD4tiJV2Roqif6-I1I9y1CtISoaeg29MvjJycA3WScuytaObYIlKLeVRZFaifhrRPrT1BwXGKd124RAzXgQ1ljOcKBevpVJhbwJdgiD4bQTuzlOMvi1gwrZjLYnRBjX9M98SSBE23IHOvd6d9OTbXqkTXu8ozUegZYtRKfgBgIQAIETrhHlcRHUbHaaPXAXjhnX2f2ewSAqjLfGSUHOfBCe62qt4OGIZpydK7VZnN59Mj0Hy8q1YRUMZxf1ROhxTweHiQ.nOSsGlmeC94eqSY_k7VSXQ",
+          "plan": "poc",
+          "plan_label": "POC / Trial",
+          "expires_at_ts": 1780649951,
+          "expires_at": "2026-06-05T08:59:11.000Z",
+          "hardware_id": "",
+          "no_bind": true,
+          "max_employees": 50,
+          "max_admins": 5,
+          "max_departments": 10,
+          "features": [
+            "dashboard",
+            "employees",
+            "orgchart",
+            "attendance",
+            "leave",
+            "documents",
+            "notifications",
+            "tickets",
+            "inventory",
+            "devices",
+            "analytics",
+            "performance",
+            "exports",
+            "smtp",
+            "payroll",
+            "ldap",
+            "advanced_security"
+          ],
+          "revoked": false,
+          "revoked_at": null,
+          "revoked_reason": null
+        }
+      ]
+    }
+  ]
+}

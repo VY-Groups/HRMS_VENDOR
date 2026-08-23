@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Force Reload - Vendor Tool</title>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+</head>
+<body>
+  <h1>Clearing Cache and Reloading...</h1>
+  <p>Please wait...</p>
+  
+  <script>
+    // Clear all localStorage
+    localStorage.clear();
+    
+    // Clear sessionStorage
+    sessionStorage.clear();
+    
+    // Force reload with cache bypass
+    setTimeout(() => {
+      window.location.href = '/index.html?nocache=' + Date.now();
+    }, 1000);
+  </script>
+</body>
+</html>
