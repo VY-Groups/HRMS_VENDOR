@@ -588,7 +588,7 @@ function renderOverviewPage() {
             <p>Monitor customer metrics, deployment readiness, and license issuance activity.</p>
           </div>
           <div class="command-actions">
-            <button id="signOutBtn" class="ghost-btn" type="button">Sign Out</button>
+            <button onclick="switchToWorkspace()" class="ghost-btn" type="button">Back to Dashboard</button>
           </div>
         </header>
 
@@ -671,7 +671,7 @@ function renderCustomersPage() {
               <span class="search-label">Search</span>
               <input id="customerSearch" class="search-input" type="text" placeholder="Search customer, contact, plan, or status" value="${escapeHtml(state.searchQuery)}">
             </label>
-            <button id="signOutBtn" class="ghost-btn" type="button">Sign Out</button>
+            <button onclick="switchToWorkspace()" class="ghost-btn" type="button">Back to Dashboard</button>
           </div>
         </header>
 
@@ -870,7 +870,7 @@ function renderLicensesPage() {
             <p>Generate, manage, and track customer licenses.</p>
           </div>
           <div class="command-actions">
-            <button id="signOutBtn" class="ghost-btn" type="button">Sign Out</button>
+            <button onclick="switchToWorkspace()" class="ghost-btn" type="button">Back to Dashboard</button>
           </div>
         </header>
 
@@ -907,7 +907,7 @@ function renderAnalyticsPage() {
             <p>Customer metrics, conversion rates, and renewal forecasts.</p>
           </div>
           <div class="command-actions">
-            <button id="signOutBtn" class="ghost-btn" type="button">Sign Out</button>
+            <button onclick="switchToWorkspace()" class="ghost-btn" type="button">Back to Dashboard</button>
           </div>
         </header>
 
@@ -935,7 +935,7 @@ function renderAuditPage() {
           </div>
           <div class="command-actions">
             <button onclick="refreshAuditLog()" class="secondary-btn" type="button">Refresh</button>
-            <button id="signOutBtn" class="ghost-btn" type="button">Sign Out</button>
+            <button onclick="switchToWorkspace()" class="ghost-btn" type="button">Back to Dashboard</button>
           </div>
         </header>
 
@@ -962,7 +962,7 @@ function renderTemplatesPage() {
           </div>
           <div class="command-actions">
             <button onclick="createTemplate()" class="primary-btn" type="button">New Template</button>
-            <button id="signOutBtn" class="ghost-btn" type="button">Sign Out</button>
+            <button onclick="switchToWorkspace()" class="ghost-btn" type="button">Back to Dashboard</button>
           </div>
         </header>
 
@@ -989,7 +989,7 @@ function renderOperatorsPage() {
           </div>
           <div class="command-actions">
             <button onclick="createOperator()" class="primary-btn" type="button">New Operator</button>
-            <button id="signOutBtn" class="ghost-btn" type="button">Sign Out</button>
+            <button onclick="switchToWorkspace()" class="ghost-btn" type="button">Back to Dashboard</button>
           </div>
         </header>
 
@@ -1015,7 +1015,7 @@ function renderPortalPage() {
             <p>Track renewal reminders, draft customer emails, and manage onboarding status.</p>
           </div>
           <div class="command-actions">
-            <button id="signOutBtn" class="ghost-btn" type="button">Sign Out</button>
+            <button onclick="switchToWorkspace()" class="ghost-btn" type="button">Back to Dashboard</button>
           </div>
         </header>
 
@@ -1114,7 +1114,7 @@ function renderSecurityPage() {
             <p>Manage security policies, mail service, 2FA, CRL, and compliance features.</p>
           </div>
           <div class="command-actions">
-            <button id="signOutBtn" class="ghost-btn" type="button">Sign Out</button>
+            <button onclick="switchToWorkspace()" class="ghost-btn" type="button">Back to Dashboard</button>
           </div>
         </header>
 
@@ -1372,7 +1372,7 @@ function renderVendorConfigurationPage() {
             <p>Vendor-side controls stay here: license policy, CRL publishing, release updates, operators, audit, templates, and customer outreach.</p>
           </div>
           <div class="command-actions">
-            <button id="signOutBtn" class="ghost-btn" type="button">Sign Out</button>
+            <button onclick="switchToWorkspace()" class="ghost-btn" type="button">Back to Dashboard</button>
           </div>
         </header>
 
@@ -1508,7 +1508,7 @@ function renderWorkspace() {
               <span class="search-label">Registry Search</span>
               <input id="customerSearch" class="search-input" type="text" placeholder="Search customer, contact, plan, or status" value="${escapeHtml(state.searchQuery)}">
             </label>
-            <button id="signOutBtn" class="ghost-btn" type="button">Sign Out</button>
+            <button onclick="switchToWorkspace()" class="ghost-btn" type="button">Back to Dashboard</button>
           </div>
         </header>
 
