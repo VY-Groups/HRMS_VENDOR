@@ -2127,145 +2127,155 @@ function renderBackupPage() {
             <p>Per-vendor GitHub backup, restore, and vendor lifecycle management.</p>
           </div>
           <div class="command-actions">
-            <button onclick="triggerManualBackup()" class="primary-btn" type="button">Backup Now</button>
-            <button id="signOutBtn" class="ghost-btn" type="button">Sign Out</button>
+            <button onclick="triggerManualBackup()" class="primary-btn" type="button">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path></svg>
+              Backup Now
+            </button>
+            <button onclick="switchToWorkspace()" class="ghost-btn" type="button">Back to Dashboard</button>
           </div>
         </header>
 
-        <div style="padding:2rem; display:flex; flex-direction:column; gap:2rem;">
+        <div class="console-grid">
 
           <!-- Backup Status -->
-          <section class="section-card">
+          <div class="section-card">
             <div class="section-header">
               <div>
                 <div class="section-kicker">GitHub Backup</div>
-                <h3 class="section-title">Backup Status</h3>
+                <div class="section-title">Backup Status</div>
               </div>
               <div class="section-actions">
                 <button onclick="refreshBackupStatus()" class="secondary-btn" type="button">Refresh</button>
               </div>
             </div>
-            <div id="backupStatusContainer" style="padding:0 20px 20px;">
+            <div id="backupStatusContainer" class="section-body">
               <div class="empty-state">Loading backup status...</div>
             </div>
-          </section>
+          </div>
 
-          <!-- Vendor Management -->
-          <section class="section-card">
+          <!-- Vendor Registry -->
+          <div class="section-card">
             <div class="section-header">
               <div>
                 <div class="section-kicker">Vendor Lifecycle</div>
-                <h3 class="section-title">Vendor Registry</h3>
+                <div class="section-title">Vendor Registry</div>
               </div>
               <div class="section-actions">
-                <button onclick="showCreateVendorForm()" class="primary-btn" type="button">Add Vendor</button>
+                <button onclick="showCreateVendorForm()" class="primary-btn" type="button">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                  Add Vendor
+                </button>
                 <button onclick="refreshVendorList()" class="secondary-btn" type="button">Refresh</button>
               </div>
             </div>
-            <div id="vendorListContainer" style="padding:0 20px 20px;">
+            <div id="vendorListContainer" class="section-body">
               <div class="empty-state">Loading vendors...</div>
             </div>
-          </section>
+          </div>
 
-          <!-- Vendor Create Form (hidden by default) -->
-          <section id="vendorFormSection" class="section-card" style="display:none;">
+          <!-- Create Vendor Form (hidden by default) -->
+          <div id="vendorFormSection" class="section-card" style="display:none;">
             <div class="section-header">
               <div>
                 <div class="section-kicker">New Vendor</div>
-                <h3 class="section-title">Create Vendor</h3>
+                <div class="section-title">Create Vendor</div>
               </div>
               <div class="section-actions">
                 <button onclick="hideVendorForm()" class="ghost-btn" type="button">Cancel</button>
               </div>
             </div>
-            <div style="padding:0 20px 20px;">
-              <form id="vendorCreateForm" onsubmit="submitCreateVendor(event)" style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
-                <label style="display:flex;flex-direction:column;gap:4px;">
-                  <span style="font-size:12px;font-weight:600;color:#64748b;">Vendor Name *</span>
-                  <input name="name" required style="padding:8px 12px;border:1px solid #e2e8f0;border-radius:6px;font-size:14px;">
-                </label>
-                <label style="display:flex;flex-direction:column;gap:4px;">
-                  <span style="font-size:12px;font-weight:600;color:#64748b;">Email *</span>
-                  <input name="email" type="email" required style="padding:8px 12px;border:1px solid #e2e8f0;border-radius:6px;font-size:14px;">
-                </label>
-                <label style="display:flex;flex-direction:column;gap:4px;">
-                  <span style="font-size:12px;font-weight:600;color:#64748b;">Company</span>
-                  <input name="company" style="padding:8px 12px;border:1px solid #e2e8f0;border-radius:6px;font-size:14px;">
-                </label>
-                <label style="display:flex;flex-direction:column;gap:4px;">
-                  <span style="font-size:12px;font-weight:600;color:#64748b;">Plan</span>
-                  <select name="plan" style="padding:8px 12px;border:1px solid #e2e8f0;border-radius:6px;font-size:14px;">
-                    <option value="poc">POC</option>
-                    <option value="starter">Starter</option>
-                    <option value="growth" selected>Growth</option>
-                    <option value="enterprise">Enterprise</option>
-                  </select>
-                </label>
-                <label style="display:flex;flex-direction:column;gap:4px;">
-                  <span style="font-size:12px;font-weight:600;color:#64748b;">Max Employees</span>
-                  <input name="max_employees" type="number" value="0" style="padding:8px 12px;border:1px solid #e2e8f0;border-radius:6px;font-size:14px;">
-                </label>
-                <label style="display:flex;flex-direction:column;gap:4px;">
-                  <span style="font-size:12px;font-weight:600;color:#64748b;">Max Admins</span>
-                  <input name="max_admins" type="number" value="0" style="padding:8px 12px;border:1px solid #e2e8f0;border-radius:6px;font-size:14px;">
-                </label>
-                <label style="display:flex;flex-direction:column;gap:4px;grid-column:span 2;">
-                  <span style="font-size:12px;font-weight:600;color:#64748b;">Notes</span>
-                  <textarea name="notes" rows="2" style="padding:8px 12px;border:1px solid #e2e8f0;border-radius:6px;font-size:14px;resize:vertical;"></textarea>
-                </label>
-                <div style="grid-column:span 2;">
+            <div class="section-body">
+              <form id="vendorCreateForm" onsubmit="submitCreateVendor(event)">
+                <div class="form-grid" style="grid-template-columns:1fr 1fr;">
+                  <label class="field">
+                    <span class="field-label">Vendor Name *</span>
+                    <input name="name" class="surface-input" required>
+                  </label>
+                  <label class="field">
+                    <span class="field-label">Email *</span>
+                    <input name="email" type="email" class="surface-input" required>
+                  </label>
+                  <label class="field">
+                    <span class="field-label">Company</span>
+                    <input name="company" class="surface-input">
+                  </label>
+                  <label class="field">
+                    <span class="field-label">Plan</span>
+                    <select name="plan" class="surface-input">
+                      <option value="poc">POC</option>
+                      <option value="starter">Starter</option>
+                      <option value="growth" selected>Growth</option>
+                      <option value="enterprise">Enterprise</option>
+                    </select>
+                  </label>
+                  <label class="field">
+                    <span class="field-label">Max Employees</span>
+                    <input name="max_employees" type="number" value="0" class="surface-input">
+                  </label>
+                  <label class="field">
+                    <span class="field-label">Max Admins</span>
+                    <input name="max_admins" type="number" value="0" class="surface-input">
+                  </label>
+                  <label class="field" style="grid-column:span 2;">
+                    <span class="field-label">Notes</span>
+                    <textarea name="notes" class="surface-textarea" rows="2"></textarea>
+                  </label>
+                </div>
+                <div style="margin-top:16px;">
                   <button type="submit" class="primary-btn">Create Vendor</button>
                 </div>
               </form>
             </div>
-          </section>
+          </div>
 
-          <!-- Restore Section -->
-          <section class="section-card">
+          <!-- Restore from Backup -->
+          <div class="section-card">
             <div class="section-header">
               <div>
                 <div class="section-kicker">Disaster Recovery</div>
-                <h3 class="section-title">Restore from Backup</h3>
+                <div class="section-title">Restore from Backup</div>
               </div>
             </div>
-            <div style="padding:0 20px 20px;">
-              <div style="display:flex;gap:12px;align-items:end;">
-                <label style="display:flex;flex-direction:column;gap:4px;flex:1;">
-                  <span style="font-size:12px;font-weight:600;color:#64748b;">Vendor ID to Restore</span>
-                  <input id="restoreVendorId" placeholder="e.g. 61b53eed" style="padding:8px 12px;border:1px solid #e2e8f0;border-radius:6px;font-size:14px;">
+            <div class="section-body">
+              <div style="display:flex;gap:12px;align-items:flex-end;">
+                <label class="field" style="flex:1;margin:0;">
+                  <span class="field-label">Vendor ID to Restore</span>
+                  <input id="restoreVendorId" class="surface-input" placeholder="e.g. 61b53eed">
                 </label>
-                <button onclick="triggerRestore()" class="secondary-btn" type="button" style="height:36px;">Restore</button>
+                <button onclick="triggerRestore()" class="secondary-btn" type="button" style="height:36px;margin-bottom:2px;">Restore</button>
               </div>
               <div id="restoreResult" style="margin-top:12px;"></div>
             </div>
-          </section>
+          </div>
 
-          <!-- Master Password Change (VY-Group only) -->
-          <section class="section-card">
+          <!-- Change VY-Group Password -->
+          <div class="section-card">
             <div class="section-header">
               <div>
                 <div class="section-kicker">Master Account</div>
-                <h3 class="section-title">Change VY-Group Password</h3>
+                <div class="section-title">Change VY-Group Password</div>
               </div>
             </div>
-            <div style="padding:0 20px 20px;">
-              <form id="masterPasswordForm" onsubmit="submitMasterPasswordChange(event)" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:600px;">
-                <label style="display:flex;flex-direction:column;gap:4px;">
-                  <span style="font-size:12px;font-weight:600;color:#64748b;">Current Password *</span>
-                  <input name="currentPassword" type="password" required style="padding:8px 12px;border:1px solid #e2e8f0;border-radius:6px;font-size:14px;">
-                </label>
-                <label style="display:flex;flex-direction:column;gap:4px;">
-                  <span style="font-size:12px;font-weight:600;color:#64748b;">New Password *</span>
-                  <input name="newPassword" type="password" required minlength="10" style="padding:8px 12px;border:1px solid #e2e8f0;border-radius:6px;font-size:14px;">
-                </label>
-                <div style="grid-column:span 2;">
+            <div class="section-body">
+              <form id="masterPasswordForm" onsubmit="submitMasterPasswordChange(event)">
+                <div class="form-grid" style="grid-template-columns:1fr 1fr;max-width:600px;">
+                  <label class="field">
+                    <span class="field-label">Current Password *</span>
+                    <input name="currentPassword" type="password" class="surface-input" required>
+                  </label>
+                  <label class="field">
+                    <span class="field-label">New Password *</span>
+                    <input name="newPassword" type="password" class="surface-input" required minlength="10">
+                  </label>
+                </div>
+                <div style="margin-top:16px;display:flex;align-items:center;gap:12px;">
                   <button type="submit" class="primary-btn">Change Password</button>
-                  <span style="font-size:12px;color:#94a3b8;margin-left:12px;">Min 10 chars, uppercase, lowercase, number, special character</span>
+                  <span style="font-size:12px;color:var(--text-muted);">Min 10 chars, uppercase, lowercase, number, special character</span>
                 </div>
               </form>
               <div id="masterPasswordResult" style="margin-top:12px;"></div>
             </div>
-          </section>
+          </div>
 
         </div>
       </main>
