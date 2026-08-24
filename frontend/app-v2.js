@@ -441,6 +441,10 @@ function renderAuthShell(mode) {
                 <h4 id="step2Header" style="color:#10b981;margin:0 0 4px;font-size:14px;">✓ Email Verified</h4>
                 <p style="color:#6b7280;font-size:12px;margin:0 0 16px;" id="verifiedEmailLabel"></p>
                 <h4 style="color:#6366f1;margin:0 0 12px;font-size:14px;">Step 2 — Create Login Account</h4>
+                <label class="field" id="step2EmailField" style="display:none;">
+                  <span class="field-label">Email</span>
+                  <input id="setupEmailStep2" class="surface-input" type="email" placeholder="your@email.com">
+                </label>
                 <label class="field">
                   <span class="field-label">Full Name</span>
                   <input id="setupFullName" class="surface-input" type="text" placeholder="Vendor Platform Admin" required>
@@ -3051,7 +3055,7 @@ function startNewCustomer() {
 async function handleSetupSubmit(event) {
   event.preventDefault();
   const full_name = document.getElementById('setupFullName').value.trim();
-  const email = document.getElementById('setupEmail')?.value.trim() || window._verifiedEmail;
+  const email = document.getElementById('setupEmailStep2')?.value.trim() || document.getElementById('setupEmail')?.value.trim() || window._verifiedEmail;
   const password = document.getElementById('setupPassword').value;
   const confirm = document.getElementById('setupPasswordConfirm').value;
   const smtpConfig = window._verifiedSmtpConfig || {};
@@ -3174,18 +3178,25 @@ window.verifyOtpKeyup = function(e) {
 
 window.skipOtpSetup = function(e) {
   e.preventDefault();
-  window._verifiedEmail = document.getElementById('setupEmail')?.value.trim() || '';
+  const emailVal = document.getElementById('setupEmail')?.value.trim() || '';
+  window._verifiedEmail = emailVal;
   window._verifiedSmtpConfig = null;
-  // Remove required from hidden step1 fields so form can submit
   ['setupEmail','setupSmtpHost','setupSmtpPort','setupSmtpUser','setupSmtpPass','setupOtp'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.removeAttribute('required');
   });
   document.getElementById('setup-step1').style.display = 'none';
   document.getElementById('setup-step2').style.display = 'block';
-  document.getElementById('verifiedEmailLabel').textContent = window._verifiedEmail || 'Not verified';
+  document.getElementById('verifiedEmailLabel').textContent = emailVal || 'Not verified';
   document.getElementById('step2Header').textContent = 'Email skipped — configure later in Security settings';
   document.getElementById('step2Header').style.color = '#f59e0b';
+  // Show email field in step 2 if not already filled
+  if (emailVal) {
+    const step2Email = document.getElementById('setupEmailStep2');
+    if (step2Email) step2Email.value = emailVal;
+  } else {
+    document.getElementById('step2EmailField').style.display = 'block';
+  }
 };
 
 async function handleLoginSubmit(event) {
