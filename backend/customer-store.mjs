@@ -79,6 +79,9 @@ function buildCustomerRecord(input = {}, existing = {}) {
     max_departments: input.max_departments === '' ? null : (Number(input.max_departments ?? existing.max_departments) || 0),
     feature_overrides: normalizeFeatureList(input.feature_overrides ?? input.features ?? existing.feature_overrides),
     notes: normalizeText(input.notes || existing.notes),
+    hrms_version: input.hrms_version || existing.hrms_version || '',
+    update_status: input.update_status || existing.update_status || 'current',
+    last_update_check: input.last_update_check || existing.last_update_check || '',
     last_license_issued_at: existing.last_license_issued_at || '',
     created_at: existing.created_at || now,
     updated_at: now,
@@ -272,6 +275,34 @@ export async function deleteCustomer(id) {
   await saveStore(store);
 
   return { deleted: true, customer: summarizeCustomer(customer), activeLicenseIds };
+}
+
+export async function updateCustomerVersion(id, hrmsVersion, updateStatus) {
+  const store = await ensureStore();
+  const idx = store.customers.findIndex(c => c.id === id);
+  if (idx === -1) throw new Error('Customer not found');
+  store.customers[idx].hrms_version = hrmsVersion || store.customers[idx].hrms_version;
+  store.customers[idx].update_status = updateStatus || store.customers[idx].update_status;
+  store.customers[idx].last_update_check = new Date().toISOString();
+  store.customers[idx].updated_at = new Date().toISOString();
+  await saveStore(store);
+  return summarizeCustomer(store.customers[idx]);
+}
+
+export async function batchUpdateCustomerVersions(updates) {
+  const store = await ensureStore();
+  let updated = 0;
+  for (const u of updates) {
+    const idx = store.customers.findIndex(c => c.id === u.id);
+    if (idx === -1) continue;
+    if (u.hrms_version !== undefined) store.customers[idx].hrms_version = u.hrms_version;
+    if (u.update_status !== undefined) store.customers[idx].update_status = u.update_status;
+    store.customers[idx].last_update_check = new Date().toISOString();
+    store.customers[idx].updated_at = new Date().toISOString();
+    updated++;
+  }
+  await saveStore(store);
+  return { updated };
 }
 
 export async function getCustomerSummary() {

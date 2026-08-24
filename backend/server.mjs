@@ -1570,6 +1570,128 @@ const server = createServer(async (req, res) => {
 
   // ── End Release Endpoints ───────────────────────────────────────────────
 
+  // ── Distribution / Push Management Endpoints ────────────────────────────
+
+  // GET /api/distribution — list all distributions
+  if (req.method === 'GET' && pathname === '/api/distribution') {
+    try {
+      const { getDistributions, getDistributionSummary } = await import('./distribution-store.mjs');
+      const data = getDistributions();
+      const summary = getDistributionSummary();
+      sendJson(res, 200, { distributions: data.distributions, summary });
+    } catch (error) {
+      sendJson(res, 500, { error: error.message });
+    }
+    return;
+  }
+
+  // GET /api/distribution/:version — get distribution for a specific version
+  if (req.method === 'GET' && pathname.startsWith('/api/distribution/')) {
+    try {
+      const version = decodeURIComponent(pathname.split('/api/distribution/')[1]);
+      const { getDistributionsByVersion } = await import('./distribution-store.mjs');
+      const dist = getDistributionsByVersion(version);
+      if (!dist) return sendJson(res, 404, { error: 'Distribution not found for this version' });
+      sendJson(res, 200, dist);
+    } catch (error) {
+      sendJson(res, 500, { error: error.message });
+    }
+    return;
+  }
+
+  // POST /api/distribution/:version/push — push release to specific customers
+  if (req.method === 'POST' && pathname.match(/^\/api\/distribution\/[^/]+\/push$/)) {
+    try {
+      const version = decodeURIComponent(pathname.split('/api/distribution/')[1].split('/')[0]);
+      const { customer_ids } = await readJsonBody(req);
+      if (!Array.isArray(customer_ids) || customer_ids.length === 0) {
+        return sendJson(res, 400, { error: 'customer_ids array is required' });
+      }
+      const { listCustomers } = await import('./customer-store.mjs');
+      const { pushToCustomer, createDistribution } = await import('./distribution-store.mjs');
+      const allCustomers = listCustomers();
+      const results = [];
+      for (const cid of customer_ids) {
+        const customer = allCustomers.find(c => c.id === cid);
+        if (!customer) { results.push({ customer_id: cid, status: 'not_found' }); continue; }
+        createDistribution(version, '', false);
+        pushToCustomer(version, cid, customer.legal_name, customer.vendor_id);
+        results.push({ customer_id: cid, name: customer.legal_name, status: 'pushed' });
+      }
+      sendJson(res, 200, { version, pushed: results.filter(r => r.status === 'pushed').length, results });
+    } catch (error) {
+      sendJson(res, 500, { error: error.message });
+    }
+    return;
+  }
+
+  // POST /api/distribution/:version/hold — hold release for specific customers
+  if (req.method === 'POST' && pathname.match(/^\/api\/distribution\/[^/]+\/hold$/)) {
+    try {
+      const version = decodeURIComponent(pathname.split('/api/distribution/')[1].split('/')[0]);
+      const { customer_ids, reason } = await readJsonBody(req);
+      if (!Array.isArray(customer_ids) || customer_ids.length === 0) {
+        return sendJson(res, 400, { error: 'customer_ids array is required' });
+      }
+      const { listCustomers } = await import('./customer-store.mjs');
+      const { holdCustomer, createDistribution } = await import('./distribution-store.mjs');
+      const allCustomers = listCustomers();
+      const results = [];
+      for (const cid of customer_ids) {
+        const customer = allCustomers.find(c => c.id === cid);
+        if (!customer) { results.push({ customer_id: cid, status: 'not_found' }); continue; }
+        createDistribution(version, '', false);
+        holdCustomer(version, cid, customer.legal_name, customer.vendor_id, reason || 'Held by operator');
+        results.push({ customer_id: cid, name: customer.legal_name, status: 'hold' });
+      }
+      sendJson(res, 200, { version, held: results.filter(r => r.status === 'hold').length, results });
+    } catch (error) {
+      sendJson(res, 500, { error: error.message });
+    }
+    return;
+  }
+
+  // POST /api/distribution/:version/push-all — push to all non-held customers
+  if (req.method === 'POST' && pathname.match(/^\/api\/distribution\/[^/]+\/push-all$/)) {
+    try {
+      const version = decodeURIComponent(pathname.split('/api/distribution/')[1].split('/')[0]);
+      const { listCustomers } = await import('./customer-store.mjs');
+      const { pushToAll, getDistributionsByVersion, createDistribution } = await import('./distribution-store.mjs');
+      const allCustomers = listCustomers();
+      createDistribution(version, '', false);
+      const customerList = allCustomers.map(c => ({ id: c.id, name: c.legal_name, vendor_id: c.vendor_id }));
+      const { dist, results } = pushToAll(version, customerList);
+      sendJson(res, 200, {
+        version,
+        total: results.length,
+        pushed: results.filter(r => r.status === 'pushed').length,
+        skipped_hold: results.filter(r => r.status === 'skipped_hold').length,
+        results
+      });
+    } catch (error) {
+      sendJson(res, 500, { error: error.message });
+    }
+    return;
+  }
+
+  // POST /api/distribution/:version/release/:customerId — release a held customer
+  if (req.method === 'POST' && pathname.match(/^\/api\/distribution\/[^/]+\/release\/[^/]+$/)) {
+    try {
+      const parts = pathname.split('/api/distribution/')[1].split('/');
+      const version = decodeURIComponent(parts[0]);
+      const customerId = parts[2];
+      const { releaseCustomer } = await import('./distribution-store.mjs');
+      const dist = releaseCustomer(version, customerId);
+      if (!dist) return sendJson(res, 404, { error: 'Distribution not found' });
+      sendJson(res, 200, { version, customer_id: customerId, status: 'released' });
+    } catch (error) {
+      sendJson(res, 500, { error: error.message });
+    }
+    return;
+  }
+
+  // ── End Distribution Endpoints ──────────────────────────────────────────
+
   // Bulk License Generation
   if (req.method === 'POST' && pathname === '/api/licenses/bulk-generate') {
     try {

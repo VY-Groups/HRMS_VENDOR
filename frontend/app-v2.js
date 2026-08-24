@@ -2,8 +2,8 @@ const TOKEN_KEY = 'vendor_console_token';
 const root = document.getElementById('root');
 const toastRegion = document.getElementById('toastRegion');
 
-// CACHE BUSTER - DO NOT REMOVE - VERSION: 2026-08-24-V3-FULL
-const VENDOR_TOOL_VERSION = 'v3.3.0-v3-Full';
+// CACHE BUSTER - DO NOT REMOVE - VERSION: 2026-08-24-V4-UpdateMgmt
+const VENDOR_TOOL_VERSION = 'v3.4.0-v4-UpdateMgmt';
 console.log('[License-Gen-Hrms] Loaded:', VENDOR_TOOL_VERSION, 'Time:', new Date().toISOString());
 console.log('[CACHE BUSTER] If you see old version, press Ctrl+Shift+Delete and clear cache!');
 
@@ -560,6 +560,10 @@ function renderSharedSidebar() {
         <button class="rail-nav-btn ${currentPage === 'publishRelease' ? 'active' : ''}" onclick="switchToPage('publishRelease')">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"></path><path d="M22 2L15 22L11 13L2 9L22 2Z"></path></svg>
           Publish Release
+        </button>
+        <button class="rail-nav-btn ${currentPage === 'updateManagement' ? 'active' : ''}" onclick="switchToPage('updateManagement')">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+          Push to Customers
         </button>
         <button class="rail-nav-btn ${currentPage === 'backup' ? 'active' : ''}" onclick="switchToPage('backup')">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
@@ -1888,6 +1892,321 @@ function renderSystemUpdatePage() {
   `;
 }
 
+// ==================== UPDATE MANAGEMENT PAGE ====================
+
+function renderUpdateManagementPage() {
+  return `
+    <div class="command-shell">
+      ${renderSharedSidebar()}
+      <main class="console-main">
+        <header class="command-bar">
+          <div class="command-heading">
+            <div class="eyebrow">Update Management</div>
+            <h2>Push Updates to Customers</h2>
+            <p>Check available HRMS releases, push updates to customers, or hold for specific ones.</p>
+          </div>
+          <div class="command-actions">
+            <button onclick="switchToWorkspace()" class="ghost-btn" type="button">Back to Dashboard</button>
+          </div>
+        </header>
+
+        <div class="console-grid">
+
+          <!-- Available Release -->
+          <div class="section-card">
+            <div class="section-header">
+              <div>
+                <div class="section-kicker">Release Channel</div>
+                <div class="section-title">Available HRMS Release</div>
+              </div>
+              <div class="section-actions">
+                <button onclick="checkAvailableRelease()" class="secondary-btn" type="button">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 11-6.219-8.56"></path><polyline points="21 3 21 9 15 9"></polyline></svg>
+                  Check GitHub
+                </button>
+              </div>
+            </div>
+            <div id="availableReleaseContainer" class="section-body">
+              <div style="text-align:center;padding:32px;color:var(--text-muted);font-size:13px;">Click "Check GitHub" to fetch the latest release</div>
+            </div>
+          </div>
+
+          <!-- Customer Selection & Push Actions -->
+          <div class="section-card">
+            <div class="section-header">
+              <div>
+                <div class="section-kicker">Distribution</div>
+                <div class="section-title">Select Customers to Push</div>
+              </div>
+              <div class="section-actions">
+                <button onclick="selectAllCustomers()" class="ghost-btn" type="button">Select All</button>
+                <button onclick="deselectAllCustomers()" class="ghost-btn" type="button">Deselect All</button>
+              </div>
+            </div>
+            <div class="section-body">
+              <div style="display:flex;gap:10px;margin-bottom:16px;">
+                <input id="pushVersionInput" class="surface-input" style="flex:1;" placeholder="Release version (auto-filled from above)">
+                <button onclick="pushToSelected()" class="primary-btn" id="pushSelectedBtn" type="button">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"></path><path d="M22 2L15 22L11 13L2 9L22 2Z"></path></svg>
+                  Push to Selected
+                </button>
+                <button onclick="holdSelected()" class="secondary-btn" id="holdSelectedBtn" type="button" style="color:var(--warning);border-color:var(--warning);">
+                  Hold Selected
+                </button>
+              </div>
+              <div id="customerListContainer" style="max-height:400px;overflow-y:auto;">
+                <div style="text-align:center;padding:32px;color:var(--text-muted);font-size:13px;">Loading customers...</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Push to All -->
+          <div class="section-card">
+            <div class="section-header">
+              <div>
+                <div class="section-kicker">Bulk Action</div>
+                <div class="section-title">Push to All Customers</div>
+              </div>
+            </div>
+            <div class="section-body">
+              <div style="display:flex;align-items:center;justify-content:space-between;">
+                <div style="font-size:13px;color:var(--text-secondary);">
+                  Push release to all customers. Customers on hold will be skipped.
+                </div>
+                <button onclick="pushToAllCustomers()" class="primary-btn" id="pushAllBtn" type="button">
+                  Push to All
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Distribution History -->
+          <div class="section-card">
+            <div class="section-header">
+              <div>
+                <div class="section-kicker">History</div>
+                <div class="section-title">Distribution History</div>
+              </div>
+              <div class="section-actions">
+                <button onclick="refreshDistributionHistory()" class="secondary-btn" type="button">Refresh</button>
+              </div>
+            </div>
+            <div id="distributionHistoryContainer" class="section-body">
+              <div style="text-align:center;padding:32px;color:var(--text-muted);font-size:13px;">Loading...</div>
+            </div>
+          </div>
+
+        </div>
+      </main>
+    </div>
+  `;
+}
+
+let _updateMgmtCustomers = [];
+let _updateMgmtSelected = new Set();
+
+function selectAllCustomers() {
+  _updateMgmtSelected = new Set(_updateMgmtCustomers.map(c => c.id));
+  renderCustomerChecklist();
+}
+
+function deselectAllCustomers() {
+  _updateMgmtSelected = new Set();
+  renderCustomerChecklist();
+}
+
+function toggleCustomer(id) {
+  if (_updateMgmtSelected.has(id)) _updateMgmtSelected.delete(id);
+  else _updateMgmtSelected.add(id);
+  renderCustomerChecklist();
+}
+
+function renderCustomerChecklist() {
+  const container = document.getElementById('customerListContainer');
+  if (!container) return;
+  if (!_updateMgmtCustomers.length) {
+    container.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text-muted);font-size:13px;">No customers found</div>';
+    return;
+  }
+  const selectedCount = _updateMgmtSelected.size;
+  container.innerHTML = `
+    <div style="padding:8px 12px;background:var(--bg);border-radius:var(--radius-sm);margin-bottom:8px;font-size:12px;color:var(--text-muted);">
+      ${selectedCount} of ${_updateMgmtCustomers.length} customers selected
+    </div>
+    ${_updateMgmtCustomers.map(c => {
+      const checked = _updateMgmtSelected.has(c.id) ? 'checked' : '';
+      const statusColor = c.update_status === 'current' ? 'var(--success)' : c.update_status === 'hold' ? 'var(--warning)' : 'var(--text-muted)';
+      return `
+        <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border-light);border-radius:var(--radius-sm);margin-bottom:4px;cursor:pointer;transition:background .15s;" onmouseover="this.style.background='var(--bg)'" onmouseout="this.style.background='transparent'">
+          <input type="checkbox" ${checked} onchange="toggleCustomer('${c.id}')" style="accent-color:var(--primary);">
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(c.legal_name)}</div>
+            <div style="font-size:11px;color:var(--text-muted);">${escapeHtml(c.contact_email || '')}</div>
+          </div>
+          <div style="text-align:right;flex-shrink:0;">
+            <div style="font-size:11px;color:var(--text-muted);">HRMS ${escapeHtml(c.hrms_version || 'unknown')}</div>
+            <div style="font-size:10px;color:${statusColor};font-weight:600;text-transform:uppercase;">${escapeHtml(c.update_status || 'current')}</div>
+          </div>
+        </label>
+      `;
+    }).join('')}
+  `;
+}
+
+async function checkAvailableRelease() {
+  const container = document.getElementById('availableReleaseContainer');
+  if (!container) return;
+  container.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text-muted);"><span class="btn-spinner" style="display:inline-block;"></span> Checking GitHub...</div>';
+  
+  try {
+    const data = await api('/api/releases/latest');
+    const release = data.release;
+    if (!release) {
+      container.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text-muted);">No releases published yet. Use "Publish Release" to create one.</div>';
+      return;
+    }
+    container.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <div>
+          <div style="font-size:20px;font-weight:700;color:var(--text);">v${escapeHtml(release.version)}</div>
+          <div style="font-size:13px;color:var(--text-muted);margin-top:2px;">Published ${escapeHtml(release.published_at ? new Date(release.published_at).toLocaleDateString() : 'unknown')}</div>
+        </div>
+        <button onclick="setPushVersion('${escapeHtml(release.version)}')" class="primary-btn" type="button">Use This Version</button>
+      </div>
+      ${release.release_notes ? `<div style="margin-top:12px;padding:12px;background:var(--bg);border-radius:var(--radius-sm);font-size:13px;color:var(--text-secondary);line-height:1.6;">${escapeHtml(release.release_notes)}</div>` : ''}
+      ${release.breaking_changes ? '<div style="margin-top:8px;padding:8px 12px;background:var(--danger-bg);border:1px solid var(--danger);border-radius:var(--radius-sm);font-size:12px;color:var(--danger);font-weight:600;">Breaking Changes — review before pushing</div>' : ''}
+    `;
+  } catch (err) {
+    container.innerHTML = `<div style="text-align:center;padding:24px;color:var(--danger);font-size:13px;">Error: ${escapeHtml(err.message)}</div>`;
+  }
+}
+
+function setPushVersion(version) {
+  const input = document.getElementById('pushVersionInput');
+  if (input) input.value = version;
+}
+
+async function pushToSelected() {
+  const version = document.getElementById('pushVersionInput')?.value?.trim();
+  if (!version) { showToast('Enter a release version first', 'warning'); return; }
+  if (!_updateMgmtSelected.size) { showToast('Select at least one customer', 'warning'); return; }
+  
+  const btn = document.getElementById('pushSelectedBtn');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="btn-spinner"></span> Pushing...'; }
+  
+  try {
+    const result = await api(`/api/distribution/${encodeURIComponent(version)}/push`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ customer_ids: Array.from(_updateMgmtSelected) })
+    });
+    showToast(`Pushed v${version} to ${result.pushed} customer(s)`, 'success');
+    refreshDistributionHistory();
+    refreshCustomerListForPush();
+  } catch (err) {
+    showToast(`Push failed: ${err.message}`, 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"></path><path d="M22 2L15 22L11 13L2 9L22 2Z"></path></svg> Push to Selected'; }
+  }
+}
+
+async function holdSelected() {
+  const version = document.getElementById('pushVersionInput')?.value?.trim();
+  if (!version) { showToast('Enter a release version first', 'warning'); return; }
+  if (!_updateMgmtSelected.size) { showToast('Select at least one customer', 'warning'); return; }
+  
+  const reason = prompt('Reason for holding (optional):') || 'Held by operator';
+  const btn = document.getElementById('holdSelectedBtn');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="btn-spinner"></span> Holding...'; }
+  
+  try {
+    const result = await api(`/api/distribution/${encodeURIComponent(version)}/hold`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ customer_ids: Array.from(_updateMgmtSelected), reason })
+    });
+    showToast(`Held v${version} for ${result.held} customer(s)`, 'success');
+    refreshDistributionHistory();
+    refreshCustomerListForPush();
+  } catch (err) {
+    showToast(`Hold failed: ${err.message}`, 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = 'Hold Selected'; }
+  }
+}
+
+async function pushToAllCustomers() {
+  const version = document.getElementById('pushVersionInput')?.value?.trim();
+  if (!version) { showToast('Enter a release version first', 'warning'); return; }
+  
+  if (!confirm(`Push v${version} to ALL customers? Customers on hold will be skipped.`)) return;
+  
+  const btn = document.getElementById('pushAllBtn');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="btn-spinner"></span> Pushing...'; }
+  
+  try {
+    const result = await api(`/api/distribution/${encodeURIComponent(version)}/push-all`, {
+      method: 'POST'
+    });
+    showToast(`Pushed to ${result.pushed}, skipped ${result.skipped_hold} held`, 'success');
+    refreshDistributionHistory();
+    refreshCustomerListForPush();
+  } catch (err) {
+    showToast(`Push all failed: ${err.message}`, 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = 'Push to All'; }
+  }
+}
+
+async function refreshCustomerListForPush() {
+  const container = document.getElementById('customerListContainer');
+  if (!container) return;
+  try {
+    const data = await api('/api/customers');
+    _updateMgmtCustomers = data.customers || data || [];
+    renderCustomerChecklist();
+  } catch (err) {
+    container.innerHTML = `<div style="text-align:center;padding:24px;color:var(--danger);font-size:13px;">Error loading customers: ${escapeHtml(err.message)}</div>`;
+  }
+}
+
+async function refreshDistributionHistory() {
+  const container = document.getElementById('distributionHistoryContainer');
+  if (!container) return;
+  try {
+    const data = await api('/api/distribution');
+    const dists = data.distributions || [];
+    if (!dists.length) {
+      container.innerHTML = '<div style="text-align:center;padding:32px;color:var(--text-muted);font-size:13px;">No distributions yet</div>';
+      return;
+    }
+    container.innerHTML = '<div style="display:flex;flex-direction:column;gap:8px;">' + dists.map(d => {
+      const pushedCount = d.customers.filter(c => c.status === 'pushed').length;
+      const holdCount = d.customers.filter(c => c.status === 'hold').length;
+      const appliedCount = d.customers.filter(c => c.status === 'applied').length;
+      return `
+        <div style="padding:12px 16px;background:var(--bg);border:1px solid var(--border-light);border-radius:var(--radius-sm);">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <span style="font-size:15px;font-weight:700;color:var(--text);">v${escapeHtml(d.release_version)}</span>
+              ${d.breaking_changes ? '<span class="status-pill red">Breaking</span>' : ''}
+            </div>
+            <div style="font-size:11px;color:var(--text-muted);">${escapeHtml(d.created_at ? new Date(d.created_at).toLocaleDateString() : '')}</div>
+          </div>
+          <div style="display:flex;gap:16px;margin-top:8px;font-size:12px;">
+            <span style="color:var(--success);">${pushedCount} pushed</span>
+            <span style="color:var(--warning);">${holdCount} held</span>
+            <span style="color:var(--primary);">${appliedCount} applied</span>
+            <span style="color:var(--text-muted);">${d.customers.length} total</span>
+          </div>
+        </div>
+      `;
+    }).join('') + '</div>';
+  } catch (err) {
+    container.innerHTML = `<div style="text-align:center;padding:24px;color:var(--danger);font-size:13px;">Error: ${escapeHtml(err.message)}</div>`;
+  }
+}
+
 // ==================== PUBLISH HRMS RELEASE PAGE ====================
 
 function renderPublishReleasePage() {
@@ -2569,6 +2888,10 @@ function renderApp() {
     case 'backup':
       root.innerHTML = renderBackupPage();
       setTimeout(() => { refreshBackupStatus(); refreshVendorList(); }, 100);
+      break;
+    case 'updateManagement':
+      root.innerHTML = renderUpdateManagementPage();
+      setTimeout(() => { refreshCustomerListForPush(); refreshDistributionHistory(); }, 100);
       break;
     case 'publishRelease':
       root.innerHTML = renderPublishReleasePage();
@@ -5052,6 +5375,29 @@ function switchToPublishRelease() {
   }, 100);
 }
 window.switchToPublishRelease = switchToPublishRelease;
+
+function switchToUpdateManagement() {
+  state.currentPage = 'updateManagement';
+  renderApp();
+  setTimeout(() => {
+    bindCurrentView();
+    refreshCustomerListForPush();
+    refreshDistributionHistory();
+  }, 100);
+}
+window.switchToUpdateManagement = switchToUpdateManagement;
+
+window.renderUpdateManagementPage = renderUpdateManagementPage;
+window.checkAvailableRelease = checkAvailableRelease;
+window.setPushVersion = setPushVersion;
+window.pushToSelected = pushToSelected;
+window.holdSelected = holdSelected;
+window.pushToAllCustomers = pushToAllCustomers;
+window.refreshCustomerListForPush = refreshCustomerListForPush;
+window.refreshDistributionHistory = refreshDistributionHistory;
+window.selectAllCustomers = selectAllCustomers;
+window.deselectAllCustomers = deselectAllCustomers;
+window.toggleCustomer = toggleCustomer;
 
 function switchToWorkspace() {
   state.currentPage = 'workspace';
