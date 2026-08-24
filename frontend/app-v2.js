@@ -2,8 +2,8 @@ const TOKEN_KEY = 'vendor_console_token';
 const root = document.getElementById('root');
 const toastRegion = document.getElementById('toastRegion');
 
-// CACHE BUSTER - DO NOT REMOVE - VERSION: 2026-08-24-V2-REDESIGN
-const VENDOR_TOOL_VERSION = 'v3.2.0-v2-Redesign';
+// CACHE BUSTER - DO NOT REMOVE - VERSION: 2026-08-24-V3-FULL
+const VENDOR_TOOL_VERSION = 'v3.3.0-v3-Full';
 console.log('[License-Gen-Hrms] Loaded:', VENDOR_TOOL_VERSION, 'Time:', new Date().toISOString());
 console.log('[CACHE BUSTER] If you see old version, press Ctrl+Shift+Delete and clear cache!');
 
@@ -556,6 +556,10 @@ function renderSharedSidebar() {
         <button class="rail-nav-btn ${currentPage === 'systemUpdate' ? 'active' : ''}" onclick="switchToPage('systemUpdate')">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
           System Update
+        </button>
+        <button class="rail-nav-btn ${currentPage === 'publishRelease' ? 'active' : ''}" onclick="switchToPage('publishRelease')">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"></path><path d="M22 2L15 22L11 13L2 9L22 2Z"></path></svg>
+          Publish Release
         </button>
         <button class="rail-nav-btn ${currentPage === 'backup' ? 'active' : ''}" onclick="switchToPage('backup')">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
@@ -1802,101 +1806,311 @@ function renderSystemUpdatePage() {
   return `
     <div class="command-shell">
       ${renderSharedSidebar()}
-
-      <main class="console-main" style="background:#f8fafc;">
-        <header class="command-bar" style="background:linear-gradient(135deg,#6366f1,#4f46e5);color:white;border:none;">
+      <main class="console-main">
+        <header class="command-bar">
           <div class="command-heading">
-            <div class="eyebrow" style="color:rgba(255,255,255,0.9);">System Management</div>
-            <h2 style="color:white;">System Update</h2>
-            <p style="color:rgba(255,255,255,0.95);">Keep your License-Gen-HRMS up to date with the latest features, security improvements, and bug fixes.</p>
+            <div class="eyebrow">System Management</div>
+            <h2>System Update</h2>
+            <p>Keep your vendor console up to date with the latest features and fixes.</p>
           </div>
           <div class="command-actions">
-            <button id="signOutBtn" class="ghost-btn" type="button" style="color:white;border-color:rgba(255,255,255,0.3);" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'">Sign Out</button>
+            <button onclick="switchToWorkspace()" class="ghost-btn" type="button">Back to Dashboard</button>
           </div>
         </header>
 
-        <div style="max-width:1000px;margin:0 auto;padding:40px 20px;">
-          <!-- Check Button Card -->
-          <div style="background:white;border-radius:20px;padding:32px;margin-bottom:24px;box-shadow:0 4px 20px rgba(0,0,0,0.08);">
-            <div style="text-align:center;">
-              <button onclick="checkSystemUpdate()" id="checkUpdateBtn" style="background:linear-gradient(135deg,#6366f1,#4f46e5);color:white;border:none;padding:14px 32px;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:10px;box-shadow:0 8px 20px -6px rgba(99,102,241,0.5);font-family:inherit;transition:all 0.2s;" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 12px 24px -6px rgba(99,102,241,0.6)'" onmouseout="this.style.transform='';this.style.boxShadow='0 8px 20px -6px rgba(99,102,241,0.5)'">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="23 4 23 10 17 10"></polyline>
-                  <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
-                </svg>
+        <div class="console-grid" style="max-width:900px;">
+
+          <!-- Current Version Card -->
+          <div class="section-card" style="margin-bottom:20px;">
+            <div class="section-body" style="display:flex;align-items:center;justify-content:space-between;">
+              <div>
+                <div class="eyebrow" style="margin-bottom:4px;">Current Version</div>
+                <div style="font-size:22px;font-weight:700;color:var(--text);letter-spacing:-.02em;" id="current-version-display">Loading...</div>
+              </div>
+              <button onclick="checkSystemUpdate()" id="checkUpdateBtn" class="primary-btn" type="button">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 11-6.219-8.56"></path><polyline points="21 3 21 9 15 9"></polyline></svg>
                 Check for Updates
               </button>
             </div>
           </div>
 
-          <!-- Update Status Card -->
-          <div style="background:white;border-radius:20px;padding:40px;margin-bottom:24px;box-shadow:0 4px 20px rgba(0,0,0,0.08);">
-            <div id="update-status" style="background:#f8fafc;border:2px solid #e2e8f0;padding:60px 40px;border-radius:16px;text-align:center;">
-              <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block;margin:0 auto 20px;">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                <polyline points="7 10 12 15 17 10"></polyline>
-                <line x1="12" y1="15" x2="12" y2="3"></line>
-              </svg>
-              <p style="margin:0;font-size:16px;color:#64748b;font-weight:600;">Click "Check for Updates" to get started</p>
+          <!-- Update Status -->
+          <div class="section-card" style="margin-bottom:20px;">
+            <div class="section-header">
+              <div>
+                <div class="section-kicker">Update Status</div>
+                <div class="section-title">Vendor Tool Self-Update</div>
+              </div>
+            </div>
+            <div id="update-status" class="section-body" style="text-align:center;padding:40px;">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--text-placeholder)" stroke-width="1.5" style="margin:0 auto 12px;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+              <div style="color:var(--text-muted);font-size:14px;">Click "Check for Updates" to get started</div>
             </div>
           </div>
 
-          <!-- Install Button -->
-          <div id="update-install-btn" style="display:none;text-align:center;margin-bottom:24px;"></div>
+          <!-- Install Button (hidden by default) -->
+          <div id="update-install-btn" style="display:none;margin-bottom:20px;"></div>
 
-          <!-- Progress -->
-          <div id="update-progress" style="display:none;margin-bottom:24px;"></div>
+          <!-- Progress (hidden by default) -->
+          <div id="update-progress" style="display:none;margin-bottom:20px;"></div>
 
-          <!-- Details Card -->
-          <div id="update-details" style="display:none;margin-bottom:24px;">
-            <div style="background:white;border-radius:20px;padding:32px;box-shadow:0 4px 20px rgba(0,0,0,0.08);">
-              <div style="background:rgba(99,102,241,0.08);border-left:4px solid #6366f1;padding:24px;border-radius:12px;margin-bottom:20px;">
-                <strong style="color:#4338ca;font-size:17px;display:flex;align-items:center;gap:10px;margin-bottom:16px;">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4338ca" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                    <polyline points="14 2 14 8 20 8"></polyline>
-                    <line x1="16" y1="13" x2="8" y2="13"></line>
-                    <line x1="16" y1="17" x2="8" y2="17"></line>
-                    <polyline points="10 9 9 9 8 9"></polyline>
-                  </svg>
-                  Release Notes
-                </strong>
-                <div id="update-release-notes" style="font-size:15px;color:#475569;white-space:pre-wrap;line-height:1.8;"></div>
+          <!-- Release Details (hidden by default) -->
+          <div id="update-details" style="display:none;margin-bottom:20px;">
+            <div class="section-card">
+              <div class="section-header">
+                <div>
+                  <div class="section-kicker">Release Notes</div>
+                  <div class="section-title">What's New</div>
+                </div>
               </div>
-              <div id="update-breaking-warning" style="display:none;background:rgba(239,68,68,0.1);border-left:4px solid #ef4444;padding:24px;border-radius:12px;">
-                <strong style="color:#b91c1c;font-size:17px;display:flex;align-items:center;gap:10px;margin-bottom:12px;">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#b91c1c" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"></path>
-                    <line x1="12" y1="9" x2="12" y2="13"></line>
-                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
-                  </svg>
-                  Breaking Changes
-                </strong>
-                <p style="margin:0;font-size:14px;color:#7f1d1d;line-height:1.7;">This update contains breaking changes. Back up your data before upgrading.</p>
+              <div id="update-release-notes" class="section-body" style="font-size:14px;line-height:1.7;color:var(--text-secondary);"></div>
+              <div id="update-breaking-warning" style="display:none;padding:0 22px 16px;">
+                <div style="background:var(--danger-bg);border:1px solid var(--danger);border-radius:var(--radius-sm);padding:12px 16px;font-size:13px;color:var(--danger);">
+                  <strong>Breaking Changes:</strong> This update may require additional configuration. Review release notes carefully before installing.
+                </div>
               </div>
             </div>
           </div>
 
-          <!-- Version Info Card -->
+          <!-- Version Info (hidden by default) -->
           <div id="update-version-info" style="display:none;">
-            <div style="background:white;border-radius:20px;padding:24px;box-shadow:0 4px 20px rgba(0,0,0,0.08);text-align:center;">
-              <div style="display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;font-size:14px;color:#6b7280;">
-                <span id="update-version-text"></span>
-                <span style="color:#d1d5db;">·</span>
-                <a href="javascript:void(0)" onclick="showReleaseHistory()" style="color:#6366f1;font-weight:700;text-decoration:none;display:flex;align-items:center;gap:6px;">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <polyline points="12 6 12 12 16 14"></polyline>
-                  </svg>
-                  View Release History
-                </a>
+            <div class="section-card">
+              <div class="section-body" style="display:flex;align-items:center;justify-content:space-between;font-size:13px;color:var(--text-muted);">
+                <span>Auto-checks run every 24 hours</span>
+                <button onclick="showReleaseHistory()" class="btn-text" type="button">View Release History</button>
               </div>
             </div>
           </div>
+
         </div>
       </main>
     </div>
   `;
+}
+
+// ==================== PUBLISH HRMS RELEASE PAGE ====================
+
+function renderPublishReleasePage() {
+  return `
+    <div class="command-shell">
+      ${renderSharedSidebar()}
+      <main class="console-main">
+        <header class="command-bar">
+          <div class="command-heading">
+            <div class="eyebrow">Release Distribution</div>
+            <h2>Publish HRMS Release</h2>
+            <p>Push release manifests to GitHub for HRMS instances to auto-update.</p>
+          </div>
+          <div class="command-actions">
+            <button onclick="switchToWorkspace()" class="ghost-btn" type="button">Back to Dashboard</button>
+          </div>
+        </header>
+
+        <div class="console-grid" style="max-width:900px;">
+
+          <!-- How It Works -->
+          <div class="section-card" style="margin-bottom:20px;">
+            <div class="section-header">
+              <div>
+                <div class="section-kicker">How It Works</div>
+                <div class="section-title">Release Distribution Flow</div>
+              </div>
+            </div>
+            <div class="section-body">
+              <div style="display:flex;gap:16px;flex-wrap:wrap;">
+                <div style="flex:1;min-width:200px;background:var(--bg);border-radius:var(--radius);padding:16px;text-align:center;">
+                  <div style="font-size:24px;margin-bottom:8px;">1</div>
+                  <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px;">Create Release</div>
+                  <div style="font-size:12px;color:var(--text-muted);">Fill in version, notes, and assets</div>
+                </div>
+                <div style="flex:1;min-width:200px;background:var(--bg);border-radius:var(--radius);padding:16px;text-align:center;">
+                  <div style="font-size:24px;margin-bottom:8px;">2</div>
+                  <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px;">Sign & Push</div>
+                  <div style="font-size:12px;color:var(--text-muted);">HMAC-signed manifest pushed to GitHub</div>
+                </div>
+                <div style="flex:1;min-width:200px;background:var(--bg);border-radius:var(--radius);padding:16px;text-align:center;">
+                  <div style="font-size:24px;margin-bottom:8px;">3</div>
+                  <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px;">HRMS Auto-Update</div>
+                  <div style="font-size:12px;color:var(--text-muted);">HRMS instances fetch and apply update</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Publish Form -->
+          <div class="section-card" style="margin-bottom:20px;">
+            <div class="section-header">
+              <div>
+                <div class="section-kicker">New Release</div>
+                <div class="section-title">Create Release Manifest</div>
+              </div>
+            </div>
+            <div class="section-body">
+              <form id="publishReleaseForm" onsubmit="submitReleasePublish(event)" style="display:flex;flex-direction:column;gap:16px;">
+                <div class="form-grid">
+                  <label class="field">
+                    <span class="field-label">Version *</span>
+                    <input name="version" class="surface-input" type="text" placeholder="e.g. 1.2.0" required>
+                  </label>
+                  <label class="field">
+                    <span class="field-label">Min License Version</span>
+                    <input name="min_license_version" class="surface-input" type="text" placeholder="e.g. 1.0.0" value="1.0.0">
+                  </label>
+                </div>
+                <label class="field">
+                  <span class="field-label">Release Notes *</span>
+                  <textarea name="release_notes" class="surface-textarea" placeholder="What changed in this release..." rows="4" required></textarea>
+                </label>
+                <div class="form-grid">
+                  <label class="field">
+                    <span class="field-label">Download URL</span>
+                    <input name="download_url" class="surface-input" type="url" placeholder="https://github.com/...zip">
+                  </label>
+                  <label class="field">
+                    <span class="field-label">Checksum (SHA-256)</span>
+                    <input name="checksum" class="surface-input" type="text" placeholder="sha256:...">
+                  </label>
+                </div>
+                <div class="form-grid">
+                  <label class="field">
+                    <span class="field-label">Size (MB)</span>
+                    <input name="size_mb" class="surface-input" type="number" step="0.1" placeholder="0">
+                  </label>
+                  <label class="field field-toggle" style="justify-content:flex-end;padding-top:24px;">
+                    <input name="breaking_changes" type="checkbox" class="toggle-input">
+                    <span class="field-label" style="margin:0;">Breaking Changes</span>
+                  </label>
+                </div>
+                <div style="display:flex;gap:10px;justify-content:flex-end;padding-top:8px;">
+                  <button type="button" onclick="document.getElementById('publishReleaseForm').reset()" class="ghost-btn">Clear</button>
+                  <button type="submit" class="primary-btn" id="publishReleaseBtn">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"></path><path d="M22 2L15 22L11 13L2 9L22 2Z"></path></svg>
+                    Publish Release
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <!-- Publish Result -->
+          <div id="publish-result" style="display:none;margin-bottom:20px;"></div>
+
+          <!-- Previous Releases -->
+          <div class="section-card">
+            <div class="section-header">
+              <div>
+                <div class="section-kicker">History</div>
+                <div class="section-title">Published Releases</div>
+              </div>
+              <div class="section-actions">
+                <button onclick="refreshReleaseHistory()" class="secondary-btn" type="button">Refresh</button>
+              </div>
+            </div>
+            <div id="release-history-list" class="section-body">
+              <div style="text-align:center;padding:24px;color:var(--text-muted);font-size:13px;">Loading...</div>
+            </div>
+          </div>
+
+        </div>
+      </main>
+    </div>
+  `;
+}
+
+async function submitReleasePublish(event) {
+  event.preventDefault();
+  const form = event.target;
+  const btn = document.getElementById('publishReleaseBtn');
+  const resultDiv = document.getElementById('publish-result');
+  
+  const data = {
+    version: form.version.value.trim(),
+    release_notes: form.release_notes.value.trim(),
+    breaking_changes: form.breaking_changes.checked,
+    min_license_version: form.min_license_version.value.trim() || '1.0.0',
+    download_url: form.download_url.value.trim(),
+    checksum: form.checksum.value.trim(),
+    size_mb: parseFloat(form.size_mb.value) || 0
+  };
+
+  if (!data.version || !data.release_notes) {
+    showToast('Version and release notes are required.', 'warning');
+    return;
+  }
+
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="btn-spinner"></span> Publishing...'; }
+  
+  try {
+    const result = await api('/api/releases/publish', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    
+    resultDiv.style.display = 'block';
+    resultDiv.innerHTML = `
+      <div class="section-card" style="border-color:var(--success);">
+        <div class="section-body">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+            <span style="font-size:16px;font-weight:700;color:var(--success);">Release Published Successfully</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--text-secondary);">
+            <div><strong>Version:</strong> v${escapeHtml(result.version)}</div>
+            <div><strong>Commit:</strong> ${result.commit_sha ? result.commit_sha.slice(0,7) : 'N/A'}</div>
+            <div><strong>Raw URL:</strong> <a href="${escapeHtml(result.raw_url)}" target="_blank" style="color:var(--primary);text-decoration:underline;">${escapeHtml(result.raw_url)}</a></div>
+          </div>
+        </div>
+      </div>
+    `;
+    
+    form.reset();
+    refreshReleaseHistory();
+    showToast(`HRMS v${result.version} published to GitHub`, 'success');
+  } catch (error) {
+    resultDiv.style.display = 'block';
+    resultDiv.innerHTML = `
+      <div class="section-card" style="border-color:var(--danger);">
+        <div class="section-body">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+            <span style="font-size:14px;font-weight:600;color:var(--danger);">${escapeHtml(error.message)}</span>
+          </div>
+        </div>
+      </div>
+    `;
+    showToast(error.message || 'Publish failed', 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"></path><path d="M22 2L15 22L11 13L2 9L22 2Z"></path></svg> Publish Release'; }
+  }
+}
+
+async function refreshReleaseHistory() {
+  const container = document.getElementById('release-history-list');
+  if (!container) return;
+  
+  try {
+    const data = await api('/api/releases');
+    const releases = data.releases || [];
+    
+    if (!releases.length) {
+      container.innerHTML = '<div style="text-align:center;padding:32px;color:var(--text-muted);font-size:13px;">No releases published yet</div>';
+      return;
+    }
+    
+    container.innerHTML = '<div style="display:flex;flex-direction:column;gap:8px;">' + releases.map(r => `
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--bg);border-radius:var(--radius-sm);border:1px solid var(--border-light);">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <span style="font-size:14px;font-weight:700;color:var(--text);">v${escapeHtml(r.version)}</span>
+          ${r.breaking_changes ? '<span class="status-pill red">Breaking</span>' : ''}
+          <span style="font-size:12px;color:var(--text-muted);">${escapeHtml(r.release_date ? new Date(r.release_date).toLocaleDateString() : '')}</span>
+        </div>
+        <div style="font-size:12px;color:var(--text-muted);max-width:300px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(r.release_notes || '')}</div>
+      </div>
+    `).join('') + '</div>';
+  } catch (error) {
+    container.innerHTML = '<div style="text-align:center;padding:24px;color:var(--danger);font-size:13px;">Failed to load releases</div>';
+  }
 }
 
 // ==================== BACKUP & VENDOR MANAGEMENT PAGE ====================
@@ -2345,6 +2559,10 @@ function renderApp() {
     case 'backup':
       root.innerHTML = renderBackupPage();
       setTimeout(() => { refreshBackupStatus(); refreshVendorList(); }, 100);
+      break;
+    case 'publishRelease':
+      root.innerHTML = renderPublishReleasePage();
+      setTimeout(() => { refreshReleaseHistory(); }, 100);
       break;
     default:
       root.innerHTML = renderOverviewPage();
@@ -4815,6 +5033,16 @@ function switchToSystemUpdate() {
   }, 100);
 }
 
+function switchToPublishRelease() {
+  state.currentPage = 'publishRelease';
+  renderApp();
+  setTimeout(() => {
+    bindCurrentView();
+    refreshReleaseHistory();
+  }, 100);
+}
+window.switchToPublishRelease = switchToPublishRelease;
+
 function switchToWorkspace() {
   state.currentPage = 'workspace';
   renderApp();
@@ -5168,6 +5396,9 @@ window.openSystemUpdate = openSystemUpdate;
 
 window.switchToSystemUpdate = switchToSystemUpdate;
 window.switchToWorkspace = switchToWorkspace;
+window.renderPublishReleasePage = renderPublishReleasePage;
+window.submitReleasePublish = submitReleasePublish;
+window.refreshReleaseHistory = refreshReleaseHistory;
 
 // Backup & Vendor Management functions
 window.refreshBackupStatus = refreshBackupStatus;
