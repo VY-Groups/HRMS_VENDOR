@@ -433,9 +433,12 @@ function renderAuthShell(mode) {
                   <input id="setupOtp" class="surface-input" type="text" placeholder="000000" maxlength="6" pattern="[0-9]{6}" inputmode="numeric" style="font-size:20px;letter-spacing:6px;text-align:center;">
                 </label>
                 <button type="button" id="verifyOtpBtn" class="primary-btn auth-submit" onclick="verifySetupOtp()" style="background:#10b981;" disabled>Verify Code</button>
+                <div style="text-align:center;margin-top:12px;">
+                  <a href="#" onclick="skipOtpSetup(event)" style="color:#9ca3af;font-size:12px;text-decoration:underline;cursor:pointer;">Skip for now (configure email later)</a>
+                </div>
               </div>
               <div id="setup-step2" style="display:none;">
-                <h4 style="color:#10b981;margin:0 0 4px;font-size:14px;">✓ Email Verified</h4>
+                <h4 id="step2Header" style="color:#10b981;margin:0 0 4px;font-size:14px;">✓ Email Verified</h4>
                 <p style="color:#6b7280;font-size:12px;margin:0 0 16px;" id="verifiedEmailLabel"></p>
                 <h4 style="color:#6366f1;margin:0 0 12px;font-size:14px;">Step 2 — Create Login Account</h4>
                 <label class="field">
@@ -3061,7 +3064,7 @@ async function handleSetupSubmit(event) {
     showToast('Passwords do not match.', 'error');
     return;
   }
-  if (password === smtpConfig.smtp_pass) {
+  if (smtpConfig.smtp_pass && password === smtpConfig.smtp_pass) {
     showToast('Login password must be different from email password.', 'error');
     return;
   }
@@ -3167,6 +3170,17 @@ window.verifySetupOtp = async function() {
 window.verifyOtpKeyup = function(e) {
   const btn = document.getElementById('verifyOtpBtn');
   if (btn) btn.disabled = (e.target.value || '').length !== 6;
+};
+
+window.skipOtpSetup = function(e) {
+  e.preventDefault();
+  window._verifiedEmail = document.getElementById('setupEmail')?.value.trim() || '';
+  window._verifiedSmtpConfig = null;
+  document.getElementById('setup-step1').style.display = 'none';
+  document.getElementById('setup-step2').style.display = 'block';
+  document.getElementById('verifiedEmailLabel').textContent = window._verifiedEmail || 'Not verified';
+  document.getElementById('step2Header').textContent = 'Email skipped — configure later in Security settings';
+  document.getElementById('step2Header').style.color = '#f59e0b';
 };
 
 async function handleLoginSubmit(event) {
