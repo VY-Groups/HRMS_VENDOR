@@ -2,8 +2,8 @@ const TOKEN_KEY = 'vendor_console_token';
 const root = document.getElementById('root');
 const toastRegion = document.getElementById('toastRegion');
 
-// CACHE BUSTER - DO NOT REMOVE - VERSION: 2026-08-24-V4-UpdateMgmt
-const VENDOR_TOOL_VERSION = 'v3.4.0-v4-UpdateMgmt';
+// CACHE BUSTER - DO NOT REMOVE - VERSION: 2026-08-24-V5-ProfileFix
+const VENDOR_TOOL_VERSION = 'v3.5.0-v5-ProfileFix';
 console.log('[License-Gen-Hrms] Loaded:', VENDOR_TOOL_VERSION, 'Time:', new Date().toISOString());
 console.log('[CACHE BUSTER] If you see old version, press Ctrl+Shift+Delete and clear cache!');
 
@@ -712,12 +712,11 @@ function renderProfilePage() {
             <p>${isNewCustomer ? 'Create a new customer record' : 'Manage customer details, contacts, and account information.'}</p>
           </div>
           <div class="command-actions">
-            <button onclick="switchToPage('customers')" class="secondary-btn" type="button">Back to List</button>
-            <button id="signOutBtn" class="ghost-btn" type="button">Sign Out</button>
+            <button onclick="switchToPage('customers')" class="ghost-btn" type="button">Back to List</button>
           </div>
         </header>
 
-        <div style="padding: 2rem; max-width: ${isNewCustomer ? '900px' : '100%'}; margin: 0 auto;">
+        <div style="padding: 2rem; max-width: ${isNewCustomer ? '900px' : '1100px'}; margin: 0 auto;">
           <section id="customerProfile" class="section-card">
             <div class="section-header">
               <div>
@@ -838,15 +837,19 @@ function renderProfilePage() {
                 <button id="copyBtn" class="secondary-btn" type="button">Copy</button>
               </div>
             </div>
-            <textarea id="licenseOutput" class="code-output" readonly placeholder="License will appear here after generation"></textarea>
+            <div class="section-body">
+              <textarea id="licenseOutput" class="code-output" readonly placeholder="License will appear here after generation"></textarea>
+            </div>
             
-            <div class="section-header" style="margin-top:2rem;">
+            <div class="section-header" style="margin-top:1.5rem;">
               <div>
                 <div class="section-kicker">Deployment Manifest</div>
                 <h3 class="section-title">Customer Deployment Package</h3>
               </div>
             </div>
-            <textarea id="summaryOutput" class="code-output" readonly placeholder="Deployment manifest will appear here"></textarea>
+            <div class="section-body">
+              <textarea id="summaryOutput" class="code-output" readonly placeholder="Deployment manifest will appear here"></textarea>
+            </div>
           </section>
           ` : ''}
         </div>

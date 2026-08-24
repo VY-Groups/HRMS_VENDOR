@@ -485,6 +485,13 @@ body {
   word-break: break-all;
   line-height: 1.7;
   position: relative;
+  width: 100%;
+  min-height: 80px;
+  max-height: 200px;
+  overflow-y: auto;
+  resize: vertical;
+  border: 1px solid rgba(255,255,255,.08);
+  box-sizing: border-box;
 }
 .code-output .copy-btn {
   position: absolute;
