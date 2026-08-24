@@ -3176,6 +3176,11 @@ window.skipOtpSetup = function(e) {
   e.preventDefault();
   window._verifiedEmail = document.getElementById('setupEmail')?.value.trim() || '';
   window._verifiedSmtpConfig = null;
+  // Remove required from hidden step1 fields so form can submit
+  ['setupEmail','setupSmtpHost','setupSmtpPort','setupSmtpUser','setupSmtpPass','setupOtp'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.removeAttribute('required');
+  });
   document.getElementById('setup-step1').style.display = 'none';
   document.getElementById('setup-step2').style.display = 'block';
   document.getElementById('verifiedEmailLabel').textContent = window._verifiedEmail || 'Not verified';
