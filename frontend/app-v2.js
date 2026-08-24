@@ -2,8 +2,8 @@ const TOKEN_KEY = 'vendor_console_token';
 const root = document.getElementById('root');
 const toastRegion = document.getElementById('toastRegion');
 
-// CACHE BUSTER - DO NOT REMOVE - VERSION: 2026-08-24-UI-REDESIGN
-const VENDOR_TOOL_VERSION = 'v3.1.0-UI-Redesign';
+// CACHE BUSTER - DO NOT REMOVE - VERSION: 2026-08-24-V2-REDESIGN
+const VENDOR_TOOL_VERSION = 'v3.2.0-v2-Redesign';
 console.log('[License-Gen-Hrms] Loaded:', VENDOR_TOOL_VERSION, 'Time:', new Date().toISOString());
 console.log('[CACHE BUSTER] If you see old version, press Ctrl+Shift+Delete and clear cache!');
 
