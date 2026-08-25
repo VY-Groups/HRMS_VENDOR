@@ -2,8 +2,8 @@ const TOKEN_KEY = 'vendor_console_token';
 const root = document.getElementById('root');
 const toastRegion = document.getElementById('toastRegion');
 
-// CACHE BUSTER - DO NOT REMOVE - VERSION: 2026-08-25-V8-Fixes
-const VENDOR_TOOL_VERSION = 'v3.8.0-v8-Fixes';
+// CACHE BUSTER - DO NOT REMOVE - VERSION: 2026-08-25-V9-LicenseStatusFix
+const VENDOR_TOOL_VERSION = 'v3.9.0-v9-LicenseStatusFix';
 console.log('[License-Gen-Hrms] Loaded:', VENDOR_TOOL_VERSION, 'Time:', new Date().toISOString());
 console.log('[CACHE BUSTER] If you see old version, press Ctrl+Shift+Delete and clear cache!');
 
@@ -2099,7 +2099,7 @@ function renderCustomerChecklist() {
             <div style="font-size:11px;color:var(--text-muted);">${escapeHtml(c.contact_email || '')}</div>
           </div>
           <div style="text-align:right;flex-shrink:0;">
-            <div style="font-size:11px;color:var(--text-muted);">HRMS ${escapeHtml(c.hrms_version || 'unknown')}</div>
+            <div style="font-size:11px;color:var(--text-muted);">HRMS ${escapeHtml(c.hrms_version || 'Unset')}</div>
             <div style="font-size:10px;color:${statusColor};font-weight:600;text-transform:uppercase;">${escapeHtml(c.update_status || 'current')}</div>
           </div>
         </label>
@@ -3033,18 +3033,30 @@ function renderRecentLicensesDash() {
     return;
   }
 
-  el.innerHTML = recent.map(l => `
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--panel-border, rgba(0,0,0,.06));">
-      <div>
-        <strong style="font-weight:600;">${escapeHtml(l.customer_name || 'Unknown')}</strong>
-        <div style="font-size:12px;color:var(--text-muted);">Type: ${escapeHtml(l.license_type || 'N/A')} | Key: ${escapeHtml(l.license_key || 'N/A').substring(0, 24)}...</div>
+  el.innerHTML = recent.map(l => {
+    const now = Math.floor(Date.now() / 1000);
+    let pillStatus, pillLabel;
+    if (l.revoked) {
+      pillStatus = 'red'; pillLabel = 'Revoked';
+    } else if (l.expires_at_ts && l.expires_at_ts < now) {
+      pillStatus = 'red'; pillLabel = 'Expired';
+    } else {
+      pillStatus = 'green'; pillLabel = 'Active';
+    }
+    const typeLabel = l.no_bind ? 'Unbound' : l.hardware_id ? 'Bound' : 'Standard';
+    return `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--panel-border, rgba(0,0,0,.06));">
+        <div>
+          <strong style="font-weight:600;">${escapeHtml(l.customer_name || 'Unknown')}</strong>
+          <div style="font-size:12px;color:var(--text-muted);">Type: ${escapeHtml(typeLabel)} | Key: ${escapeHtml(l.license_key || 'N/A').substring(0, 24)}...</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:12px;color:var(--text-muted);">${escapeHtml(l.generated_at || '')}</div>
+          <span class="status-pill ${pillStatus}">${escapeHtml(pillLabel)}</span>
+        </div>
       </div>
-      <div style="text-align:right;">
-        <div style="font-size:12px;color:var(--text-muted);">${escapeHtml(l.generated_at || '')}</div>
-        <span class="status-pill ${l.status === 'active' ? 'green' : l.status === 'expired' ? 'red' : 'yellow'}">${escapeHtml(l.status || 'unknown')}</span>
-      </div>
-    </div>
-  `).join('');
+    `;
+  }).join('');
 }
 
 function renderRenewalsDash() {
