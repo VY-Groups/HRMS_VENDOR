@@ -2,8 +2,8 @@ const TOKEN_KEY = 'vendor_console_token';
 const root = document.getElementById('root');
 const toastRegion = document.getElementById('toastRegion');
 
-// CACHE BUSTER - DO NOT REMOVE - VERSION: 2026-08-25-V7-ImmediateVersion
-const VENDOR_TOOL_VERSION = 'v3.7.0-v7-ImmediateVersion';
+// CACHE BUSTER - DO NOT REMOVE - VERSION: 2026-08-25-V8-Fixes
+const VENDOR_TOOL_VERSION = 'v3.8.0-v8-Fixes';
 console.log('[License-Gen-Hrms] Loaded:', VENDOR_TOOL_VERSION, 'Time:', new Date().toISOString());
 console.log('[CACHE BUSTER] If you see old version, press Ctrl+Shift+Delete and clear cache!');
 
@@ -570,6 +570,12 @@ function renderSharedSidebar() {
           Backup & Vendors
         </button>
       </nav>
+      <div style="padding:0 12px;margin-top:auto;">
+        <button onclick="handleLogout()" class="rail-nav-btn" type="button" style="width:100%;color:var(--text-muted);border-top:1px solid var(--border-light);padding-top:12px;margin-top:8px;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+          Sign Out
+        </button>
+      </div>
     </aside>
   `;
 }
@@ -1418,15 +1424,15 @@ function renderVendorConfigurationPage() {
             </div>
             <div class="metric-grid" style="margin-top:1rem;">
               ${configCards.map(card => `
-                <div class="metric-card" style="align-items:flex-start;min-height:240px;padding:24px;border:1px solid var(--line);border-radius:12px;background:var(--surface);transition:border-color 0.2s ease,box-shadow 0.2s ease;cursor:default;" onmouseenter="this.style.borderColor='#6366f1';this.style.boxShadow='0 4px 16px rgba(99,102,241,0.12)'" onmouseleave="this.style.borderColor='var(--line)';this.style.boxShadow='none'">
+                <div class="metric-card" style="align-items:flex-start;min-height:240px;padding:24px;border:1px solid var(--border-light);border-radius:12px;background:var(--bg);transition:border-color 0.2s ease,box-shadow 0.2s ease;cursor:default;" onmouseenter="this.style.borderColor='#6366f1';this.style.boxShadow='0 4px 16px rgba(99,102,241,0.12)'" onmouseleave="this.style.borderColor='';this.style.boxShadow='none'">
                   <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
                     <div style="width:36px;height:36px;border-radius:8px;background:rgba(99,102,241,0.1);display:flex;align-items:center;justify-content:center;font-size:14px;color:#6366f1;"><i class="fa-solid ${card.icon}"></i></div>
                     <div class="section-kicker">${escapeHtml(card.eyebrow)}</div>
                   </div>
                   <h3 class="section-title" style="font-size:18px;margin:6px 0 16px;">${escapeHtml(card.title)}</h3>
-                  <div style="display:grid;gap:0;width:100%;font-size:13px;color:var(--muted);">
+                  <div style="display:grid;gap:0;width:100%;font-size:13px;color:var(--text-secondary);">
                     ${card.rows.map(([label, value]) => `
-                      <div style="display:flex;justify-content:space-between;gap:14px;border-bottom:1px solid rgba(255,255,255,0.06);padding:10px 0;">
+                      <div style="display:flex;justify-content:space-between;gap:14px;border-bottom:1px solid var(--border-light);padding:10px 0;">
                         <span style="opacity:0.7;">${escapeHtml(label)}</span>
                         <strong style="color:var(--text);text-align:right;font-weight:500;">${escapeHtml(value)}</strong>
                       </div>
