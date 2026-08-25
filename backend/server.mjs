@@ -1824,7 +1824,15 @@ const server = createServer(async (req, res) => {
         reason: body.reason || 'manual',
         debounce: false
       });
-      sendJson(res, 200, result);
+      if (!result.success && result.reason === 'no_token') {
+        sendJson(res, 200, {
+          success: false,
+          warning: true,
+          error: 'GitHub backup not configured. Set VENDOR_GITHUB_TOKEN to enable.'
+        });
+      } else {
+        sendJson(res, 200, result);
+      }
     } catch (error) {
       sendJson(res, 400, { error: error.message });
     }

@@ -2,8 +2,8 @@ const TOKEN_KEY = 'vendor_console_token';
 const root = document.getElementById('root');
 const toastRegion = document.getElementById('toastRegion');
 
-// CACHE BUSTER - DO NOT REMOVE - VERSION: 2026-08-24-V5-ProfileFix
-const VENDOR_TOOL_VERSION = 'v3.5.0-v5-ProfileFix';
+// CACHE BUSTER - DO NOT REMOVE - VERSION: 2026-08-25-V6-BugFixes
+const VENDOR_TOOL_VERSION = 'v3.6.0-v6-BugFixes';
 console.log('[License-Gen-Hrms] Loaded:', VENDOR_TOOL_VERSION, 'Time:', new Date().toISOString());
 console.log('[CACHE BUSTER] If you see old version, press Ctrl+Shift+Delete and clear cache!');
 
@@ -151,7 +151,7 @@ function showToast(message, type = 'info') {
   }, 3200);
 }
 
-function showModal({ title, message, type = 'alert', inputValue = '', okText = 'OK', cancelText = 'Cancel' } = {}) {
+function showModal({ title, message, type = 'alert', inputValue = '', okText = 'OK', cancelText = 'Cancel', isHtml = false } = {}) {
   return new Promise(resolve => {
     const overlay = document.createElement('div');
     overlay.className = 'modal-overlay';
@@ -167,9 +167,9 @@ function showModal({ title, message, type = 'alert', inputValue = '', okText = '
 
     const body = document.createElement('div');
     body.className = 'modal-body';
-    const msg = document.createElement('p');
+    const msg = document.createElement('div');
     msg.className = 'modal-message';
-    msg.textContent = message;
+    if (isHtml) { msg.innerHTML = message; } else { msg.textContent = message; }
     body.appendChild(msg);
 
     let inputEl = null;
@@ -1118,7 +1118,8 @@ function renderSecurityPage() {
           </div>
         </header>
 
-        <div style="padding: 2rem;">
+        <div style="padding:28px;display:flex;flex-direction:column;gap:24px;">
+
           <section class="section-card">
             <div class="section-header">
               <div>
@@ -1126,38 +1127,49 @@ function renderSecurityPage() {
                 <h3 class="section-title">License-Gen-HRMS Security Model</h3>
               </div>
             </div>
-            <div class="boundary-card" style="margin-top: 1rem;">
-              <ul id="securityList" class="security-list"></ul>
+            <div class="section-body">
+              <div class="boundary-card">
+                <ul id="securityList" class="security-list"></ul>
+              </div>
             </div>
           </section>
 
-          <section class="section-card" style="margin-top:20px;">
+          <section class="section-card">
             <div class="section-header">
               <div>
-                <div class="section-kicker">Two-Factor Authentication</div>
+                <div class="section-kicker">TWO-FACTOR AUTHENTICATION</div>
                 <h3 class="section-title">2FA / TOTP</h3>
               </div>
             </div>
-            <div id="totpStatusArea" style="padding:16px 0;">
+            <div id="totpStatusArea" class="section-body">
               <p style="color:#6b7280;">Loading 2FA status...</p>
             </div>
           </section>
 
-          <section class="section-card" style="margin-top:20px;">
+          <section class="section-card">
             <div class="section-header">
               <div>
-                <div class="section-kicker">Mail Service</div>
+                <div class="section-kicker">MAIL SERVICE</div>
                 <h3 class="section-title">SMTP Configuration</h3>
               </div>
             </div>
-            <div id="mailConfigArea" style="padding:16px 0;">
+            <div id="mailConfigArea" class="section-body">
               <p style="color:#6b7280;">Loading mail configuration...</p>
             </div>
           </section>
-          
-          <section class="section-card" style="margin-top: 20px;">
-            <div id="securityContainer"></div>
+
+          <section class="section-card">
+            <div class="section-header">
+              <div>
+                <div class="section-kicker">CERTIFICATE REVOCATION</div>
+                <h3 class="section-title">CRL Management</h3>
+              </div>
+            </div>
+            <div id="securityContainer" class="section-body">
+              <p style="color:#6b7280;">Loading CRL settings...</p>
+            </div>
           </section>
+
         </div>
       </main>
     </div>
@@ -1202,31 +1214,51 @@ async function loadMailConfig() {
   try {
     const cfg = await api('/api/mail/config');
     area.innerHTML = `
-      <form id="mailConfigForm" onsubmit="saveMailConfig(event)" style="display:grid;gap:12px;max-width:600px;">
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
+      <form id="mailConfigForm" onsubmit="saveMailConfig(event)" style="display:flex;flex-direction:column;gap:16px;">
+        <label class="field">
+          <span class="field-label">Enable Mail Service</span>
           <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
             <input type="checkbox" id="mailActive" ${cfg.is_active ? 'checked' : ''} style="width:18px;height:18px;">
-            <strong>Enable Mail Service</strong>
+            <span style="font-size:13px;">Active</span>
+          </label>
+        </label>
+        <div class="form-grid">
+          <label class="field">
+            <span class="field-label">SMTP Host *</span>
+            <input id="mailHost" class="surface-input" type="text" value="${escapeHtml(cfg.smtp_host || '')}" placeholder="smtp.gmail.com" required>
+          </label>
+          <label class="field">
+            <span class="field-label">Port</span>
+            <input id="mailPort" class="surface-input" type="number" value="${cfg.smtp_port || 587}">
+          </label>
+          <label class="field">
+            <span class="field-label">SMTP User (Email) *</span>
+            <input id="mailUser" class="surface-input" type="email" value="${escapeHtml(cfg.smtp_user || '')}" placeholder="you@gmail.com" required>
+          </label>
+          <label class="field">
+            <span class="field-label">SMTP Password *</span>
+            <input id="mailPass" class="surface-input" type="password" value="" placeholder="${cfg.smtp_pass ? '•••••••• (set)' : 'Enter SMTP password'}">
+          </label>
+          <label class="field">
+            <span class="field-label">From Name</span>
+            <input id="mailFromName" class="surface-input" type="text" value="${escapeHtml(cfg.smtp_from_name || 'VY Group Vendor Console')}">
+          </label>
+          <label class="field">
+            <span class="field-label">From Email</span>
+            <input id="mailFromEmail" class="surface-input" type="email" value="${escapeHtml(cfg.smtp_from_email || '')}" placeholder="noreply@vygroup.com">
           </label>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 100px;gap:12px;">
-          <label class="field"><span class="field-label">SMTP Host *</span><input id="mailHost" class="surface-input" type="text" value="${escapeHtml(cfg.smtp_host || '')}" placeholder="smtp.gmail.com" required></label>
-          <label class="field"><span class="field-label">Port</span><input id="mailPort" class="surface-input" type="number" value="${cfg.smtp_port || 587}"></label>
-        </div>
-        <label class="field"><span class="field-label">SMTP User (Email) *</span><input id="mailUser" class="surface-input" type="email" value="${escapeHtml(cfg.smtp_user || '')}" placeholder="you@gmail.com" required></label>
-        <label class="field"><span class="field-label">SMTP Password *</span><input id="mailPass" class="surface-input" type="password" value="" placeholder="${cfg.smtp_pass ? '•••••••• (set)' : 'Enter SMTP password'}"></label>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-          <label class="field"><span class="field-label">From Name</span><input id="mailFromName" class="surface-input" type="text" value="${escapeHtml(cfg.smtp_from_name || 'VY Group Vendor Console')}"></label>
-          <label class="field"><span class="field-label">From Email</span><input id="mailFromEmail" class="surface-input" type="email" value="${escapeHtml(cfg.smtp_from_email || '')}" placeholder="noreply@vygroup.com"></label>
-        </div>
-        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
-          <input type="checkbox" id="mailSecure" ${cfg.smtp_secure ? 'checked' : ''} style="width:18px;height:18px;">
-          <span style="font-size:13px;">Use TLS/SSL (port 465)</span>
+        <label class="field">
+          <span class="field-label">TLS/SSL</span>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+            <input type="checkbox" id="mailSecure" ${cfg.smtp_secure ? 'checked' : ''} style="width:18px;height:18px;">
+            <span style="font-size:13px;">Use TLS/SSL (port 465)</span>
+          </label>
         </label>
         <div style="display:flex;gap:8px;margin-top:8px;">
-          <button type="submit" class="primary-btn" style="padding:10px 24px;">Save Configuration</button>
-          <button type="button" onclick="testMailConnection()" class="secondary-btn" style="padding:10px 20px;">Test Connection</button>
-          <button type="button" onclick="sendTestEmail()" class="secondary-btn" style="padding:10px 20px;">Send Test Email</button>
+          <button type="submit" class="primary-btn">Save Configuration</button>
+          <button type="button" onclick="testMailConnection()" class="secondary-btn">Test Connection</button>
+          <button type="button" onclick="sendTestEmail()" class="secondary-btn">Send Test Email</button>
         </div>
       </form>`;
   } catch (e) {
@@ -1302,7 +1334,7 @@ function renderVendorConfigurationPage() {
         ['Binding posture', 'Hardware-bound and unbound license support'],
         ['Renewal model', 'Validity period, expiry warnings, and extension workflow']
       ],
-      action: `<button class="primary-btn" type="button" onclick="switchToPage('licenses')">Open License Factory</button>`
+      action: `<button class="primary-btn" type="button" style="width:100%;padding:10px 0;font-size:13px;" onclick="switchToPage('licenses')">Open License Factory</button>`
     },
     {
       title: 'Customer Portal',
@@ -1313,7 +1345,7 @@ function renderVendorConfigurationPage() {
         ['Message templates', 'Trial, renewal, expiry, and delivery templates'],
         ['Renewal queue', `${state.expiringLicenses.length || 0} expiring license(s) loaded`]
       ],
-      action: `<button class="primary-btn" type="button" onclick="switchToPage('portal')">Open Outreach</button>`
+      action: `<button class="primary-btn" type="button" style="width:100%;padding:10px 0;font-size:13px;" onclick="switchToPage('portal')">Open Outreach</button>`
     },
     {
       title: 'CRL Publishing',
@@ -1324,7 +1356,7 @@ function renderVendorConfigurationPage() {
         ['Release repo', 'HRMS-Release-Management CRL path'],
         ['Runtime dependency', 'HRMS consumes CRL, but does not edit it']
       ],
-      action: `<button class="primary-btn" type="button" onclick="switchToPage('security')">Open CRL Controls</button>`
+      action: `<button class="primary-btn" type="button" style="width:100%;padding:10px 0;font-size:13px;" onclick="switchToPage('security')">Open CRL Controls</button>`
     },
     {
       title: 'Release Channel',
@@ -1335,7 +1367,7 @@ function renderVendorConfigurationPage() {
         ['Publishing', 'Vendor release service and release manifest'],
         ['Install surface', 'System Update page in this console']
       ],
-      action: `<button class="primary-btn" type="button" onclick="switchToPage('systemUpdate')">Open System Update</button>`
+      action: `<button class="primary-btn" type="button" style="width:100%;padding:10px 0;font-size:13px;" onclick="switchToPage('systemUpdate')">Open System Update</button>`
     },
     {
       title: 'Operators & Audit',
@@ -1346,7 +1378,7 @@ function renderVendorConfigurationPage() {
         ['Audit trail', 'Issuance, renewal, revocation, and operator events'],
         ['HRMS boundary', 'No HRMS admin settings are edited here']
       ],
-      action: `<button class="primary-btn" type="button" onclick="switchToPage('operators')">Open Operators</button>`
+      action: `<button class="primary-btn" type="button" style="width:100%;padding:10px 0;font-size:13px;" onclick="switchToPage('operators')">Open Operators</button>`
     },
     {
       title: 'Tool Ownership',
@@ -1357,7 +1389,7 @@ function renderVendorConfigurationPage() {
         ['Webmail', 'Mail providers, DNS, DKIM, mailboxes, queue, templates'],
         ['Vendor', 'Customers, licenses, CRL, vendor release updates']
       ],
-      action: `<button class="secondary-btn" type="button" onclick="showToast('Configuration boundaries are separated by product surface.', 'info')">Boundary Confirmed</button>`
+      action: `<button class="primary-btn" type="button" style="width:100%;padding:10px 0;font-size:13px;background:#6366f1;opacity:0.7;" onclick="showToast('Configuration boundaries are separated by product surface.', 'info')">Boundary Confirmed</button>`
     }
   ];
 
@@ -1386,18 +1418,21 @@ function renderVendorConfigurationPage() {
             </div>
             <div class="metric-grid" style="margin-top:1rem;">
               ${configCards.map(card => `
-                <div class="metric-card" style="align-items:flex-start;min-height:240px;">
-                  <div class="section-kicker">${escapeHtml(card.eyebrow)}</div>
-                  <h3 class="section-title" style="font-size:18px;margin:6px 0 12px;">${escapeHtml(card.title)}</h3>
-                  <div style="display:grid;gap:10px;width:100%;font-size:13px;color:var(--muted);">
+                <div class="metric-card" style="align-items:flex-start;min-height:240px;padding:24px;border:1px solid var(--line);border-radius:12px;background:var(--surface);transition:border-color 0.2s ease,box-shadow 0.2s ease;cursor:default;" onmouseenter="this.style.borderColor='#6366f1';this.style.boxShadow='0 4px 16px rgba(99,102,241,0.12)'" onmouseleave="this.style.borderColor='var(--line)';this.style.boxShadow='none'">
+                  <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
+                    <div style="width:36px;height:36px;border-radius:8px;background:rgba(99,102,241,0.1);display:flex;align-items:center;justify-content:center;font-size:14px;color:#6366f1;"><i class="fa-solid ${card.icon}"></i></div>
+                    <div class="section-kicker">${escapeHtml(card.eyebrow)}</div>
+                  </div>
+                  <h3 class="section-title" style="font-size:18px;margin:6px 0 16px;">${escapeHtml(card.title)}</h3>
+                  <div style="display:grid;gap:0;width:100%;font-size:13px;color:var(--muted);">
                     ${card.rows.map(([label, value]) => `
-                      <div style="display:flex;justify-content:space-between;gap:14px;border-bottom:1px solid var(--line);padding-bottom:8px;">
-                        <span>${escapeHtml(label)}</span>
-                        <strong style="color:var(--text);text-align:right;">${escapeHtml(value)}</strong>
+                      <div style="display:flex;justify-content:space-between;gap:14px;border-bottom:1px solid rgba(255,255,255,0.06);padding:10px 0;">
+                        <span style="opacity:0.7;">${escapeHtml(label)}</span>
+                        <strong style="color:var(--text);text-align:right;font-weight:500;">${escapeHtml(value)}</strong>
                       </div>
                     `).join('')}
                   </div>
-                  <div style="margin-top:auto;padding-top:16px;">${card.action}</div>
+                  <div style="margin-top:auto;padding-top:18px;width:100%;display:flex;justify-content:flex-end;">${card.action}</div>
                 </div>
               `).join('')}
             </div>
@@ -1894,6 +1929,18 @@ function renderSystemUpdatePage() {
     </div>
   `;
 }
+
+async function loadSystemVersion() {
+  const el = document.getElementById('current-version-display');
+  if (!el) return;
+  try {
+    const data = await api('/api/updates/status');
+    el.textContent = data.current_version || VENDOR_TOOL_VERSION || 'Unknown';
+  } catch (err) {
+    el.textContent = VENDOR_TOOL_VERSION || 'Unknown';
+  }
+}
+window.loadSystemVersion = loadSystemVersion;
 
 // ==================== UPDATE MANAGEMENT PAGE ====================
 
@@ -2665,6 +2712,8 @@ async function triggerManualBackup() {
     const result = await api(`/api/backup/${vendorId}`, { method: 'POST', body: JSON.stringify({ reason: 'manual_ui' }) });
     if (result.success) {
       showToast(`Backup complete (v${result.version}, ${result.elapsed_ms}ms)`, 'success');
+    } else if (result.warning) {
+      showToast(result.error || 'GitHub backup not configured. Set VENDOR_GITHUB_TOKEN to enable.', 'warning');
     } else {
       showToast(`Backup failed: ${result.error || result.reason}`, 'error');
     }
@@ -2887,6 +2936,7 @@ function renderApp() {
       break;
     case 'systemUpdate':
       root.innerHTML = renderSystemUpdatePage();
+      setTimeout(() => { loadSystemVersion(); }, 100);
       break;
     case 'backup':
       root.innerHTML = renderBackupPage();
@@ -3053,28 +3103,31 @@ function renderCustomerList() {
     const selected = customer.id === state.selectedCustomerId;
     const latest = customer.latest_license;
     const renewalDays = getDaysUntil(customer.renewal_date);
-    const isPOC = customer.status === 'poc' || customer.plan === 'poc';
-    const pocBadge = isPOC ? '<span class="status-pill poc" style="margin-left: 0.5rem; font-size: 0.7rem;">POC</span>' : '';
-    const footer = latest
-      ? `Last issue ${formatDateTime(latest.generated_at)}`
-      : renewalDays == null
-        ? 'No license issued yet'
-        : renewalDays < 0
-          ? 'Renewal overdue'
-          : `Renewal in ${renewalDays} days`;
+    const status = customer.status || 'active';
+    const licenseInfo = latest
+      ? `Issued ${formatDateOnly(latest.generated_at)}`
+      : 'No license yet';
+    const planLabel = formatLabel(customer.plan || '--');
+    const deployLabel = formatLabel(customer.deployment_type || 'on-prem');
     return `
-      <button class="customer-item ${selected ? 'active' : ''}" data-customer-id="${escapeHtml(customer.id)}" type="button">
+      <button class="customer-item ${selected ? 'active' : ''}" data-customer-id="${escapeHtml(customer.id)}" data-status="${escapeHtml(status)}" type="button">
         <div class="customer-item-head">
           <div>
-            <div class="customer-title">${escapeHtml(customer.legal_name)}${pocBadge}</div>
+            <div class="customer-title">${escapeHtml(customer.legal_name)}</div>
             <div class="customer-sub">${escapeHtml(customer.workspace_name || 'Workspace pending')}</div>
-            <div class="customer-meta">${escapeHtml(customer.primary_contact || 'No primary contact')}${customer.contact_email ? ` / ${escapeHtml(customer.contact_email)}` : ''}</div>
           </div>
-          <span class="status-pill ${escapeHtml(customer.status || 'active')}">${escapeHtml(formatLabel(customer.status))}</span>
+          <span class="status-pill ${escapeHtml(status)}">${escapeHtml(formatLabel(status))}</span>
+        </div>
+        <div class="customer-meta">
+          <span>${escapeHtml(customer.primary_contact || '')}</span>
+          ${customer.contact_email ? `<span style="color:#d1d5db;">|</span><span>${escapeHtml(customer.contact_email)}</span>` : ''}
         </div>
         <div class="customer-item-foot">
-          <span>${escapeHtml(formatLabel(customer.plan || '--'))} / ${escapeHtml(formatLabel(customer.deployment_type || 'on-prem'))}</span>
-          <span>${escapeHtml(footer)}</span>
+          <div class="customer-foot-left">
+            <span class="status-pill ${escapeHtml(status)}" style="font-size:10px;padding:2px 8px;">${escapeHtml(planLabel)}</span>
+            <span style="font-size:11px;color:#9ca3af;">${escapeHtml(deployLabel)}</span>
+          </div>
+          <div class="customer-foot-right">${escapeHtml(licenseInfo)}</div>
         </div>
       </button>
     `;
@@ -4557,7 +4610,42 @@ function previewTemplate(key) {
     .replace(/\{\{days_remaining\}\}/g, '30')
     .replace(/\{\{hardware_id\}\}/g, customer?.hardware_id || 'Not bound');
   
-  showModal({ title: `Template: ${template.name}`, message: `Subject: ${template.subject}\n\n${preview}`, type: 'alert' });
+  const subject = escapeHtml(template.subject);
+  const body = escapeHtml(preview).replace(/\n/g, '<br>');
+
+  const html = `
+    <div style="font-family:inherit; font-size:14px; color:var(--text); line-height:1.7; letter-spacing:0.01em;">
+      <div style="
+        background:var(--bg);
+        border:1px solid var(--border);
+        border-radius:var(--radius);
+        padding:16px 20px;
+        margin-bottom:16px;
+      ">
+        <span style="font-size:11px; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-secondary); font-weight:600;">Subject</span>
+        <div style="margin-top:4px; font-size:15px; font-weight:700; color:var(--text);">${subject}</div>
+      </div>
+      <div style="
+        background:#ffffff;
+        border:1px solid var(--border);
+        border-radius:var(--radius);
+        padding:20px 24px;
+        line-height:1.8;
+        letter-spacing:0.005em;
+        color:var(--text);
+        white-space:pre-wrap;
+      ">${body}</div>
+    </div>`;
+
+  showModal({
+    title: template.name,
+    message: html,
+    type: 'alert',
+    okText: 'Close',
+    isHtml: true
+  }).then(() => {
+    navigator.clipboard.writeText(`Subject: ${template.subject}\n\n${preview}`).catch(() => {});
+  });
 }
 
 // Full Analytics Rendering
@@ -5113,49 +5201,56 @@ function renderSecuritySettings() {
   if (!container) return;
   
   container.innerHTML = `
-    <div class="form-grid">
-      <div class="history-card">
-        <h4 style="margin-bottom:12px;">Session Management</h4>
-        <p style="color:var(--muted);font-size:13px;">
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:middle;margin-right:4px;color:#10b981;"><polyline points="20 6 9 17 4 12"></polyline></svg> Session timeout: 30 minutes<br>
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:middle;margin-right:4px;color:#10b981;"><polyline points="20 6 9 17 4 12"></polyline></svg> Auto-logout on inactivity<br>
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:middle;margin-right:4px;color:#10b981;"><polyline points="20 6 9 17 4 12"></polyline></svg> Secure token storage
-        </p>
+    <div class="section-header">
+      <div>
+        <div class="section-kicker">Security Features</div>
+        <h3 class="section-title">Platform Security Controls</h3>
       </div>
-      <div class="history-card">
-        <h4 style="margin-bottom:12px;">Rate Limiting</h4>
-        <p style="color:var(--muted);font-size:13px;">
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:middle;margin-right:4px;color:#10b981;"><polyline points="20 6 9 17 4 12"></polyline></svg> 100 requests per minute<br>
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:middle;margin-right:4px;color:#10b981;"><polyline points="20 6 9 17 4 12"></polyline></svg> IP-based tracking<br>
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:middle;margin-right:4px;color:#10b981;"><polyline points="20 6 9 17 4 12"></polyline></svg> Automatic cleanup
-        </p>
-      </div>
-      <div class="history-card">
-        <h4 style="margin-bottom:12px;">Data Protection</h4>
-        <p style="color:var(--muted);font-size:13px;">
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:middle;margin-right:4px;color:#10b981;"><polyline points="20 6 9 17 4 12"></polyline></svg> AES-256-GCM encryption<br>
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:middle;margin-right:4px;color:#10b981;"><polyline points="20 6 9 17 4 12"></polyline></svg> Secure password hashing<br>
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:middle;margin-right:4px;color:#10b981;"><polyline points="20 6 9 17 4 12"></polyline></svg> GDPR compliance ready
-        </p>
-      </div>
-      <div class="history-card">
-        <h4 style="margin-bottom:12px;">Audit Trail</h4>
-        <p style="color:var(--muted);font-size:13px;">
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:middle;margin-right:4px;color:#10b981;"><polyline points="20 6 9 17 4 12"></polyline></svg> All actions logged<br>
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:middle;margin-right:4px;color:#10b981;"><polyline points="20 6 9 17 4 12"></polyline></svg> Operator tracking<br>
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:middle;margin-right:4px;color:#10b981;"><polyline points="20 6 9 17 4 12"></polyline></svg> Timestamp records
-        </p>
+    </div>
+    <div class="section-body">
+      <div class="form-grid">
+        <div class="history-card">
+          <h4 style="margin-bottom:12px;">Session Management</h4>
+          <p style="color:var(--muted);font-size:13px;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:middle;margin-right:4px;color:#10b981;"><polyline points="20 6 9 17 4 12"></polyline></svg> Session timeout: 30 minutes<br>
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:middle;margin-right:4px;color:#10b981;"><polyline points="20 6 9 17 4 12"></polyline></svg> Auto-logout on inactivity<br>
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:middle;margin-right:4px;color:#10b981;"><polyline points="20 6 9 17 4 12"></polyline></svg> Secure token storage
+          </p>
+        </div>
+        <div class="history-card">
+          <h4 style="margin-bottom:12px;">Rate Limiting</h4>
+          <p style="color:var(--muted);font-size:13px;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:middle;margin-right:4px;color:#10b981;"><polyline points="20 6 9 17 4 12"></polyline></svg> 100 requests per minute<br>
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:middle;margin-right:4px;color:#10b981;"><polyline points="20 6 9 17 4 12"></polyline></svg> IP-based tracking<br>
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:middle;margin-right:4px;color:#10b981;"><polyline points="20 6 9 17 4 12"></polyline></svg> Automatic cleanup
+          </p>
+        </div>
+        <div class="history-card">
+          <h4 style="margin-bottom:12px;">Data Protection</h4>
+          <p style="color:var(--muted);font-size:13px;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:middle;margin-right:4px;color:#10b981;"><polyline points="20 6 9 17 4 12"></polyline></svg> AES-256-GCM encryption<br>
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:middle;margin-right:4px;color:#10b981;"><polyline points="20 6 9 17 4 12"></polyline></svg> Secure password hashing<br>
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:middle;margin-right:4px;color:#10b981;"><polyline points="20 6 9 17 4 12"></polyline></svg> GDPR compliance ready
+          </p>
+        </div>
+        <div class="history-card">
+          <h4 style="margin-bottom:12px;">Audit Trail</h4>
+          <p style="color:var(--muted);font-size:13px;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:middle;margin-right:4px;color:#10b981;"><polyline points="20 6 9 17 4 12"></polyline></svg> All actions logged<br>
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:middle;margin-right:4px;color:#10b981;"><polyline points="20 6 9 17 4 12"></polyline></svg> Operator tracking<br>
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:middle;margin-right:4px;color:#10b981;"><polyline points="20 6 9 17 4 12"></polyline></svg> Timestamp records
+          </p>
+        </div>
       </div>
     </div>
 
-    <!-- CRL Management -->
-    <div style="margin-top:32px;">
-      <div class="section-header nested-header">
+    <section class="section-card" style="margin-top:20px;">
+      <div class="section-header">
         <div>
           <div class="section-kicker">Certificate Revocation List</div>
           <h3 class="section-title">CRL Management</h3>
         </div>
-        <div style="display:flex;gap:10px;">
+        <div class="section-actions">
           <button onclick="loadCRLStatus()" class="secondary-btn">Refresh</button>
           <button onclick="publishCRL()" class="primary-btn" id="publishCRLBtn">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -5163,13 +5258,13 @@ function renderSecuritySettings() {
           </button>
         </div>
       </div>
-
-      <div id="crlStatusPanel" style="margin-bottom:20px;">
-        <div class="empty-state">Loading CRL status...</div>
+      <div class="section-body">
+        <div id="crlStatusPanel" style="margin-bottom:20px;">
+          <div class="empty-state">Loading CRL status...</div>
+        </div>
+        <div id="crlEntriesPanel"></div>
       </div>
-
-      <div id="crlEntriesPanel"></div>
-    </div>
+    </section>
   `;
 
   // Load CRL status immediately
@@ -5519,6 +5614,11 @@ async function checkSystemUpdate() {
       if (versionText) {
         versionText.textContent = 'Check interval: every ' + (data.update_check_interval_hours || 24) + ' hours';
       }
+    }
+
+    const versionDisplay = document.getElementById('current-version-display');
+    if (versionDisplay && data.current_version) {
+      versionDisplay.textContent = data.current_version;
     }
   } catch (err) {
     statusDiv.innerHTML =
