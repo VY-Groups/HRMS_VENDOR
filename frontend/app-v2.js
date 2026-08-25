@@ -2,8 +2,8 @@ const TOKEN_KEY = 'vendor_console_token';
 const root = document.getElementById('root');
 const toastRegion = document.getElementById('toastRegion');
 
-// CACHE BUSTER - DO NOT REMOVE - VERSION: 2026-08-25-V6-BugFixes
-const VENDOR_TOOL_VERSION = 'v3.6.0-v6-BugFixes';
+// CACHE BUSTER - DO NOT REMOVE - VERSION: 2026-08-25-V7-ImmediateVersion
+const VENDOR_TOOL_VERSION = 'v3.7.0-v7-ImmediateVersion';
 console.log('[License-Gen-Hrms] Loaded:', VENDOR_TOOL_VERSION, 'Time:', new Date().toISOString());
 console.log('[CACHE BUSTER] If you see old version, press Ctrl+Shift+Delete and clear cache!');
 
@@ -1933,12 +1933,11 @@ function renderSystemUpdatePage() {
 async function loadSystemVersion() {
   const el = document.getElementById('current-version-display');
   if (!el) return;
+  el.textContent = VENDOR_TOOL_VERSION || 'Unknown';
   try {
     const data = await api('/api/updates/status');
-    el.textContent = data.current_version || VENDOR_TOOL_VERSION || 'Unknown';
-  } catch (err) {
-    el.textContent = VENDOR_TOOL_VERSION || 'Unknown';
-  }
+    if (data && data.current_version) el.textContent = data.current_version;
+  } catch (err) { /* already showing fallback */ }
 }
 window.loadSystemVersion = loadSystemVersion;
 
