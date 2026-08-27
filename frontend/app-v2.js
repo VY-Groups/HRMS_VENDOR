@@ -2,8 +2,9 @@ const TOKEN_KEY = 'vendor_console_token';
 const root = document.getElementById('root');
 const toastRegion = document.getElementById('toastRegion');
 
-// CACHE BUSTER - DO NOT REMOVE - VERSION: 2026-08-25-V10-OverviewLoadingFix
-const VENDOR_TOOL_VERSION = 'v3.10.0-v10-OverviewLoadingFix';
+// CACHE BUSTER - DO NOT REMOVE - VERSION: 2026-08-25-V11-CompletePlatform
+const VENDOR_TOOL_VERSION = 'v4.0.0-v11-CompletePlatform';
+console.log('[License-Gen-Hrms] Loaded:', VENDOR_TOOL_VERSION, 'Time:', new Date().toISOString());
 console.log('[License-Gen-Hrms] Loaded:', VENDOR_TOOL_VERSION, 'Time:', new Date().toISOString());
 console.log('[CACHE BUSTER] If you see old version, press Ctrl+Shift+Delete and clear cache!');
 
@@ -569,6 +570,34 @@ function renderSharedSidebar() {
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
           Backup & Vendors
         </button>
+        <button class="rail-nav-btn ${currentPage === 'activity' ? 'active' : ''}" onclick="switchToPage('activity')">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+          Activity Feed
+        </button>
+        <button class="rail-nav-btn ${currentPage === 'health' ? 'active' : ''}" onclick="switchToPage('health')">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>
+          Health Scores
+        </button>
+        <button class="rail-nav-btn ${currentPage === 'deployments' ? 'active' : ''}" onclick="switchToPage('deployments')">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+          Deployments
+        </button>
+        <button class="rail-nav-btn ${currentPage === 'campaigns' ? 'active' : ''}" onclick="switchToPage('campaigns')">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+          Campaigns
+        </button>
+        <button class="rail-nav-btn ${currentPage === 'reports' ? 'active' : ''}" onclick="switchToPage('reports')">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path><path d="M22 12A10 10 0 0 0 12 2v10z"></path></svg>
+          Reports
+        </button>
+        <button class="rail-nav-btn ${currentPage === 'webhooks' ? 'active' : ''}" onclick="switchToPage('webhooks')">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+          Webhooks
+        </button>
+        <button class="rail-nav-btn ${currentPage === 'selfService' ? 'active' : ''}" onclick="switchToPage('selfService')">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M8 14s1.5 2 4 2 4-2 4-2"></path><line x1="9" y1="9" x2="9.01" y2="9"></line><line x1="15" y1="9" x2="15.01" y2="9"></line></svg>
+          Customer Portal
+        </button>
       </nav>
       <div style="padding:0 12px;margin-top:auto;">
         <button onclick="handleLogout()" class="rail-nav-btn" type="button" style="width:100%;color:var(--text-muted);border-top:1px solid var(--border-light);padding-top:12px;margin-top:8px;">
@@ -594,7 +623,7 @@ function renderOverviewPage() {
             <p>Monitor customer metrics, deployment readiness, and license issuance activity.</p>
           </div>
           <div class="command-actions">
-            <button onclick="switchToWorkspace()" class="ghost-btn" type="button">Back to Dashboard</button>
+            <button onclick="switchToPage('overview')" class="ghost-btn" type="button">Back to Dashboard</button>
           </div>
         </header>
 
@@ -677,7 +706,7 @@ function renderCustomersPage() {
               <span class="search-label">Search</span>
               <input id="customerSearch" class="search-input" type="text" placeholder="Search customer, contact, plan, or status" value="${escapeHtml(state.searchQuery)}">
             </label>
-            <button onclick="switchToWorkspace()" class="ghost-btn" type="button">Back to Dashboard</button>
+            <button onclick="switchToPage('overview')" class="ghost-btn" type="button">Back to Dashboard</button>
           </div>
         </header>
 
@@ -876,7 +905,7 @@ function renderLicensesPage() {
             <p>Generate, manage, and track customer licenses.</p>
           </div>
           <div class="command-actions">
-            <button onclick="switchToWorkspace()" class="ghost-btn" type="button">Back to Dashboard</button>
+            <button onclick="switchToPage('overview')" class="ghost-btn" type="button">Back to Dashboard</button>
           </div>
         </header>
 
@@ -913,20 +942,88 @@ function renderAnalyticsPage() {
             <p>Customer metrics, conversion rates, and renewal forecasts.</p>
           </div>
           <div class="command-actions">
-            <button onclick="switchToWorkspace()" class="ghost-btn" type="button">Back to Dashboard</button>
+            <button onclick="switchToPage('overview')" class="ghost-btn" type="button">Back to Dashboard</button>
           </div>
         </header>
 
-        <div style="padding: 2rem;">
-          <section class="section-card">
-            <h3 style="padding:20px 20px 0;">Analytics Dashboard</h3>
-            <div id="chartsContainer" style="padding:20px;"></div>
+        <div style="padding: 0 28px;">
+          <section class="section-card" style="padding:20px;">
+            <h3 style="font-size:14px;font-weight:600;margin-bottom:16px;">Key Metrics</h3>
+            <div id="analyticsMetricsGrid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;"></div>
+          </section>
+          <section class="section-card" style="padding:20px;margin-top:20px;">
+            <h3 style="font-size:14px;font-weight:600;margin-bottom:16px;">Visual Analytics</h3>
+            <div id="analyticsChartsContainer"></div>
+          </section>
+          <section class="section-card" style="padding:20px;margin-top:20px;">
+            <h3 style="font-size:14px;font-weight:600;margin-bottom:16px;">Expiring Licenses</h3>
+            <div id="analyticsExpiringList"></div>
           </section>
         </div>
       </main>
-    </div>
-  `;
+    </div>`;
 }
+
+async function loadAnalyticsPage() {
+  const metricsEl = document.getElementById('analyticsMetricsGrid');
+  const chartsEl = document.getElementById('analyticsChartsContainer');
+  const expiringEl = document.getElementById('analyticsExpiringList');
+  try {
+    const data = await api('/api/analytics/dashboard');
+    if (metricsEl) {
+      metricsEl.innerHTML = [
+        { label: 'Total Customers', value: data.total_customers || 0, color: 'var(--primary, #6366f1)' },
+        { label: 'Active Customers', value: data.active_customers || 0, color: '#10b981' },
+        { label: 'POC Customers', value: data.poc_customers || 0, color: '#f59e0b' },
+        { label: 'Conversion Rate', value: (data.conversion_rate || 0) + '%', color: '#6366f1' }
+      ].map(m => `<div style="padding:16px;border-left:4px solid ${m.color};background:var(--bg);border-radius:0 8px 8px 0;"><div style="font-size:11px;text-transform:uppercase;color:var(--text-muted);font-weight:600;">${m.label}</div><div style="font-size:24px;font-weight:700;color:${m.color};margin-top:4px;">${m.value}</div></div>`).join('');
+    }
+    if (chartsEl) {
+      const customers = state.customers || [];
+      const planCounts = {};
+      customers.forEach(c => { planCounts[c.plan] = (planCounts[c.plan] || 0) + 1; });
+      const maxPlan = Math.max(...Object.values(planCounts), 1);
+      const barHtml = Object.entries(planCounts).map(([plan, count]) => {
+        const pct = Math.round((count / maxPlan) * 100);
+        return `<div style="margin-bottom:12px;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px;font-size:12px;"><span style="text-transform:capitalize;font-weight:500;">${escapeHtml(plan)}</span><span style="color:var(--text-muted);">${count}</span></div>
+          <div style="background:var(--bg, #f3f4f6);border-radius:4px;height:12px;overflow:hidden;"><div style="width:${pct}%;height:100%;background:var(--primary, #6366f1);border-radius:4px;transition:width .3s;"></div></div>
+        </div>`;
+      }).join('');
+      const statusCounts = {};
+      customers.forEach(c => { statusCounts[c.status] = (statusCounts[c.status] || 0) + 1; });
+      const maxStatus = Math.max(...Object.values(statusCounts), 1);
+      const statusColors = { active: '#10b981', poc: '#f59e0b', prospect: '#3b82f6', archived: '#6b7280' };
+      const statusHtml = Object.entries(statusCounts).map(([status, count]) => {
+        const pct = Math.round((count / maxStatus) * 100);
+        const color = statusColors[status] || '#6b7280';
+        return `<div style="margin-bottom:12px;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px;font-size:12px;"><span style="text-transform:capitalize;font-weight:500;">${escapeHtml(status)}</span><span style="color:var(--text-muted);">${count}</span></div>
+          <div style="background:var(--bg, #f3f4f6);border-radius:4px;height:12px;overflow:hidden;"><div style="width:${pct}%;height:100%;background:${color};border-radius:4px;transition:width .3s;"></div></div>
+        </div>`;
+      }).join('');
+      chartsEl.innerHTML = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+        <div><h4 style="font-size:12px;text-transform:uppercase;color:var(--text-muted);font-weight:600;margin-bottom:12px;">Customers by Plan</h4>${barHtml || '<div style="color:var(--text-muted);font-size:12px;">No data</div>'}</div>
+        <div><h4 style="font-size:12px;text-transform:uppercase;color:var(--text-muted);font-weight:600;margin-bottom:12px;">Customers by Status</h4>${statusHtml || '<div style="color:var(--text-muted);font-size:12px;">No data</div>'}</div>
+      </div>`;
+    }
+    if (expiringEl) {
+      const expiring = data.expiring_licenses || [];
+      if (!expiring.length) {
+        expiringEl.innerHTML = '<div class="empty-state">No licenses expiring within 30 days.</div>';
+      } else {
+        expiringEl.innerHTML = expiring.map(e => `<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border-light, rgba(0,0,0,.06));">
+          <div><span style="font-weight:600;font-size:13px;">${escapeHtml(e.customer_name)}</span><span style="font-size:12px;color:var(--text-muted);margin-left:8px;">${escapeHtml(e.plan)}</span></div>
+          <div style="text-align:right;"><span style="font-size:12px;color:${e.days_remaining <= 7 ? 'var(--danger, #ef4444)' : 'var(--text-muted)'};">${e.days_remaining} days left</span></div>
+        </div>`).join('');
+      }
+    }
+  } catch (err) {
+    if (chartsEl) chartsEl.innerHTML = `<div class="empty-state" style="color:var(--danger);">${escapeHtml(err.message)}</div>`;
+  }
+}
+
+window.loadAnalyticsPage = loadAnalyticsPage;
 
 function renderAuditPage() {
   return `
@@ -941,7 +1038,7 @@ function renderAuditPage() {
           </div>
           <div class="command-actions">
             <button onclick="refreshAuditLog()" class="secondary-btn" type="button">Refresh</button>
-            <button onclick="switchToWorkspace()" class="ghost-btn" type="button">Back to Dashboard</button>
+            <button onclick="switchToPage('overview')" class="ghost-btn" type="button">Back to Dashboard</button>
           </div>
         </header>
 
@@ -968,7 +1065,7 @@ function renderTemplatesPage() {
           </div>
           <div class="command-actions">
             <button onclick="createTemplate()" class="primary-btn" type="button">New Template</button>
-            <button onclick="switchToWorkspace()" class="ghost-btn" type="button">Back to Dashboard</button>
+            <button onclick="switchToPage('overview')" class="ghost-btn" type="button">Back to Dashboard</button>
           </div>
         </header>
 
@@ -976,11 +1073,67 @@ function renderTemplatesPage() {
           <section class="section-card">
             <div id="templatesContainer"></div>
           </section>
+          <section class="section-card" style="margin-top:20px;">
+            <div style="padding:16px 20px;border-bottom:1px solid var(--border-light, rgba(0,0,0,.06));"><h3 style="font-size:14px;font-weight:600;">Custom Templates</h3></div>
+            <div id="customTemplatesContainer" style="padding:16px 20px;">
+              <div class="empty-state">Loading custom templates...</div>
+            </div>
+          </section>
         </div>
       </main>
-    </div>
-  `;
+    </div>`;
 }
+
+async function loadCustomTemplates() {
+  const el = document.getElementById('customTemplatesContainer');
+  if (!el) return;
+  try {
+    const data = await api('/api/templates');
+    const templates = data.templates || [];
+    if (!templates.length) {
+      el.innerHTML = '<div class="empty-state">No custom templates yet. Click "New Template" to create one.</div>';
+      return;
+    }
+    el.innerHTML = templates.map(t => {
+      const catColors = { custom: '#6b7280', welcome: '#10b981', renewal: '#f59e0b', trial: '#6366f1', alert: '#ef4444' };
+      const color = catColors[t.category] || '#6b7280';
+      return `<div style="display:flex;justify-content:space-between;align-items:flex-start;padding:14px 0;border-bottom:1px solid var(--border-light, rgba(0,0,0,.06));">
+        <div style="flex:1;min-width:0;">
+          <div style="font-weight:600;font-size:13px;color:var(--text);">${escapeHtml(t.name)}</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">Subject: ${escapeHtml(t.subject)}</div>
+          <div style="font-size:11px;margin-top:4px;"><span style="padding:2px 8px;border-radius:10px;background:${color}20;color:${color};font-weight:500;">${escapeHtml(t.category)}</span></div>
+        </div>
+        <div style="display:flex;gap:6px;flex-shrink:0;margin-left:12px;">
+          <button onclick="previewCustomTemplate('${t.id}')" class="secondary-btn" style="font-size:11px;padding:4px 10px;">Preview</button>
+          <button onclick="deleteCustomTemplate('${t.id}')" class="ghost-btn" style="font-size:11px;color:var(--danger);padding:4px 10px;">Delete</button>
+        </div>
+      </div>`;
+    }).join('');
+  } catch (err) {
+    el.innerHTML = `<div class="empty-state" style="color:var(--danger);">${escapeHtml(err.message)}</div>`;
+  }
+}
+
+async function previewCustomTemplate(id) {
+  try {
+    const data = await api('/api/templates');
+    const t = (data.templates || []).find(t => t.id === id);
+    if (!t) { showToast('Template not found.', 'error'); return; }
+    const sampleVars = { customer_name: 'Acme Corp', license_key: 'HRMS2-demo-key-123...', plan: 'Enterprise', expires_at: '2027-01-01', contact_name: 'John Doe' };
+    let body = t.body;
+    let subject = t.subject;
+    for (const [k, v] of Object.entries(sampleVars)) {
+      body = body.replace(new RegExp(`\\{\\{${k}\\}\\}`, 'g'), v);
+      subject = subject.replace(new RegExp(`\\{\\{${k}\\}\\}`, 'g'), v);
+    }
+    showModal({ title: t.name, message: `<div style="margin-bottom:12px;"><strong>Subject:</strong> ${escapeHtml(subject)}</div><div style="border:1px solid var(--border-light);border-radius:8px;padding:16px;background:var(--bg);font-size:13px;line-height:1.6;">${body}</div>`, isHtml: true });
+  } catch (err) { showToast(err.message, 'error'); }
+}
+
+window.loadCustomTemplates = loadCustomTemplates;
+window.previewCustomTemplate = previewCustomTemplate;
+window.submitCreateTemplate = submitCreateTemplate;
+window.deleteCustomTemplate = deleteCustomTemplate;
 
 function renderOperatorsPage() {
   return `
@@ -995,7 +1148,7 @@ function renderOperatorsPage() {
           </div>
           <div class="command-actions">
             <button onclick="createOperator()" class="primary-btn" type="button">New Operator</button>
-            <button onclick="switchToWorkspace()" class="ghost-btn" type="button">Back to Dashboard</button>
+            <button onclick="switchToPage('overview')" class="ghost-btn" type="button">Back to Dashboard</button>
           </div>
         </header>
 
@@ -1021,7 +1174,7 @@ function renderPortalPage() {
             <p>Track renewal reminders, draft customer emails, and manage onboarding status.</p>
           </div>
           <div class="command-actions">
-            <button onclick="switchToWorkspace()" class="ghost-btn" type="button">Back to Dashboard</button>
+            <button onclick="switchToPage('overview')" class="ghost-btn" type="button">Back to Dashboard</button>
           </div>
         </header>
 
@@ -1120,7 +1273,7 @@ function renderSecurityPage() {
             <p>Manage security policies, mail service, 2FA, CRL, and compliance features.</p>
           </div>
           <div class="command-actions">
-            <button onclick="switchToWorkspace()" class="ghost-btn" type="button">Back to Dashboard</button>
+            <button onclick="switchToPage('overview')" class="ghost-btn" type="button">Back to Dashboard</button>
           </div>
         </header>
 
@@ -1410,7 +1563,7 @@ function renderVendorConfigurationPage() {
             <p>Vendor-side controls stay here: license policy, CRL publishing, release updates, operators, audit, templates, and customer outreach.</p>
           </div>
           <div class="command-actions">
-            <button onclick="switchToWorkspace()" class="ghost-btn" type="button">Back to Dashboard</button>
+            <button onclick="switchToPage('overview')" class="ghost-btn" type="button">Back to Dashboard</button>
           </div>
         </header>
 
@@ -1549,7 +1702,7 @@ function renderWorkspace() {
               <span class="search-label">Registry Search</span>
               <input id="customerSearch" class="search-input" type="text" placeholder="Search customer, contact, plan, or status" value="${escapeHtml(state.searchQuery)}">
             </label>
-            <button onclick="switchToWorkspace()" class="ghost-btn" type="button">Back to Dashboard</button>
+            <button onclick="switchToPage('overview')" class="ghost-btn" type="button">Back to Dashboard</button>
           </div>
         </header>
 
@@ -1862,7 +2015,7 @@ function renderSystemUpdatePage() {
             <p>Keep your vendor console up to date with the latest features and fixes.</p>
           </div>
           <div class="command-actions">
-            <button onclick="switchToWorkspace()" class="ghost-btn" type="button">Back to Dashboard</button>
+            <button onclick="switchToPage('overview')" class="ghost-btn" type="button">Back to Dashboard</button>
           </div>
         </header>
 
@@ -1961,7 +2114,7 @@ function renderUpdateManagementPage() {
             <p>Check available HRMS releases, push updates to customers, or hold for specific ones.</p>
           </div>
           <div class="command-actions">
-            <button onclick="switchToWorkspace()" class="ghost-btn" type="button">Back to Dashboard</button>
+            <button onclick="switchToPage('overview')" class="ghost-btn" type="button">Back to Dashboard</button>
           </div>
         </header>
 
@@ -2276,7 +2429,7 @@ function renderPublishReleasePage() {
             <p>Push release manifests to GitHub for HRMS instances to auto-update.</p>
           </div>
           <div class="command-actions">
-            <button onclick="switchToWorkspace()" class="ghost-btn" type="button">Back to Dashboard</button>
+            <button onclick="switchToPage('overview')" class="ghost-btn" type="button">Back to Dashboard</button>
           </div>
         </header>
 
@@ -2505,7 +2658,7 @@ function renderBackupPage() {
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path></svg>
               Backup Now
             </button>
-            <button onclick="switchToWorkspace()" class="ghost-btn" type="button">Back to Dashboard</button>
+            <button onclick="switchToPage('overview')" class="ghost-btn" type="button">Back to Dashboard</button>
           </div>
         </header>
 
@@ -2919,12 +3072,14 @@ function renderApp() {
       break;
     case 'analytics':
       root.innerHTML = renderAnalyticsPage();
+      setTimeout(() => { loadAnalyticsPage(); }, 100);
       break;
     case 'audit':
       root.innerHTML = renderAuditPage();
       break;
     case 'templates':
       root.innerHTML = renderTemplatesPage();
+      setTimeout(() => { renderTemplates(); loadCustomTemplates(); }, 100);
       break;
     case 'operators':
       root.innerHTML = renderOperatorsPage();
@@ -2954,6 +3109,33 @@ function renderApp() {
     case 'publishRelease':
       root.innerHTML = renderPublishReleasePage();
       setTimeout(() => { refreshReleaseHistory(); }, 100);
+      break;
+    case 'activity':
+      root.innerHTML = renderActivityFeedPage();
+      setTimeout(() => { loadActivityFeed(); }, 100);
+      break;
+    case 'health':
+      root.innerHTML = renderHealthScoresPage();
+      setTimeout(() => { loadHealthScores(); }, 100);
+      break;
+    case 'deployments':
+      root.innerHTML = renderDeploymentsPage();
+      setTimeout(() => { loadDeploymentStatus(); }, 100);
+      break;
+    case 'campaigns':
+      root.innerHTML = renderCampaignsPage();
+      setTimeout(() => { loadCampaigns(); }, 100);
+      break;
+    case 'reports':
+      root.innerHTML = renderReportsPage();
+      setTimeout(() => { loadReportSummary(); }, 100);
+      break;
+    case 'webhooks':
+      root.innerHTML = renderWebhooksPage();
+      setTimeout(() => { loadWebhooks(); }, 100);
+      break;
+    case 'selfService':
+      root.innerHTML = renderSelfServicePage();
       break;
     default:
       root.innerHTML = renderOverviewPage();
@@ -4589,9 +4771,46 @@ VY Group Team`
 };
 
 async function createTemplate() {
-  const name = await showModal({ title: 'Create Template', message: 'Template Name:', type: 'prompt', okText: 'Create' });
-  if (!name) return;
-  showToast('Template creation feature - Coming soon!', 'info');
+  const modal = document.getElementById('modalOverlay');
+  if (!modal) return;
+  modal.innerHTML = `
+    <div class="modal-box" style="max-width:560px;">
+      <div class="modal-header"><h3>Create Email Template</h3></div>
+      <div class="modal-body">
+        <div class="field"><label class="field-label">Template Name</label><input type="text" id="tplName" class="surface-input" placeholder="e.g. Onboarding Welcome"></div>
+        <div class="field"><label class="field-label">Subject Line</label><input type="text" id="tplSubject" class="surface-input" placeholder="Welcome to HRMS, {{customer_name}}"></div>
+        <div class="field"><label class="field-label">Email Body (HTML supported, use {{variable}} placeholders)</label><textarea id="tplBody" class="surface-textarea" rows="8" placeholder="<h2>Welcome {{customer_name}}</h2><p>Your license key is {{license_key}}...</p>"></textarea></div>
+        <div class="field"><label class="field-label">Category</label><select id="tplCategory" class="surface-input"><option value="custom">Custom</option><option value="welcome">Welcome</option><option value="renewal">Renewal</option><option value="trial">Trial</option><option value="alert">Alert</option></select></div>
+      </div>
+      <div class="modal-footer">
+        <button onclick="document.getElementById('modalOverlay').classList.add('hidden')" class="ghost-btn">Cancel</button>
+        <button onclick="submitCreateTemplate()" class="primary-btn">Create Template</button>
+      </div>
+    </div>`;
+  modal.classList.remove('hidden');
+}
+
+async function submitCreateTemplate() {
+  const name = document.getElementById('tplName')?.value?.trim();
+  const subject = document.getElementById('tplSubject')?.value?.trim();
+  const body = document.getElementById('tplBody')?.value?.trim();
+  const category = document.getElementById('tplCategory')?.value || 'custom';
+  if (!name || !subject || !body) { showToast('Name, subject, and body are required.', 'error'); return; }
+  try {
+    await api('/api/templates', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, subject, body, category }) });
+    showToast('Template created.', 'success');
+    document.getElementById('modalOverlay')?.classList.add('hidden');
+    renderTemplatesPage();
+  } catch (err) { showToast(err.message, 'error'); }
+}
+
+async function deleteCustomTemplate(id) {
+  if (!confirm('Delete this template?')) return;
+  try {
+    await api(`/api/templates/${id}`, { method: 'DELETE' });
+    showToast('Template deleted.', 'success');
+    renderTemplatesPage();
+  } catch (err) { showToast(err.message, 'error'); }
 }
 
 function renderTemplates() {
@@ -5534,7 +5753,7 @@ function openSystemUpdate() {
 }
 
 function closeSystemUpdate() {
-  switchToWorkspace();
+  switchToPage('overview');
 }
 
 function renderMarkdownNotes(text) {
@@ -6393,14 +6612,16 @@ window.saveLdapSettings = async function(event) {
   btn.disabled = true; btn.textContent = 'Saving...';
   try {
     await api('/api/settings/ldap', {
-      method: 'POST',
+      method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        ldap_url: document.getElementById('ldapUrl').value.trim(),
-        ldap_base_dn: document.getElementById('ldapBaseDn').value.trim(),
-        ldap_bind_dn: document.getElementById('ldapBindDn').value.trim(),
-        ldap_user_filter: document.getElementById('ldapUserFilter').value.trim(),
-        ldap_auto_provision: document.getElementById('ldapAutoProvision').checked
+        url: document.getElementById('ldapUrl').value.trim(),
+        base_dn: document.getElementById('ldapBaseDn').value.trim(),
+        bind_dn: document.getElementById('ldapBindDn').value.trim(),
+        bind_password: document.getElementById('ldapBindPassword')?.value || '',
+        user_filter: document.getElementById('ldapUserFilter').value.trim(),
+        use_ssl: document.getElementById('ldapUseSsl')?.checked || false,
+        use_tls: document.getElementById('ldapUseTls')?.checked || false
       })
     });
     showToast('LDAP settings saved.', 'success');
@@ -6415,20 +6636,21 @@ window.testLdapConnection = async function() {
   const resultDiv = document.getElementById('ldapTestResult');
   if (!resultDiv) return;
   resultDiv.style.display = 'block';
-  resultDiv.innerHTML = '<div style="padding:12px;background:#fef3c7;border-radius:8px;color:#92400e;font-size:13px;">?? Testing connection...</div>';
+  resultDiv.innerHTML = '<div style="padding:12px;background:var(--bg);border-radius:8px;color:var(--text-muted);font-size:13px;">Testing connection...</div>';
 
   try {
     const resp = await api('/api/settings/ldap/test', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        ldap_url: document.getElementById('ldapUrl').value.trim(),
-        ldap_base_dn: document.getElementById('ldapBaseDn').value.trim()
+        url: document.getElementById('ldapUrl').value.trim(),
+        base_dn: document.getElementById('ldapBaseDn').value.trim()
       })
     });
-    resultDiv.innerHTML = '<div style="padding:12px;background:#f0fdf4;border-radius:8px;color:#166534;font-size:13px;">? Connection successful: ' + escapeHtml(resp.message || 'LDAP server is reachable') + '</div>';
+    const success = resp.success;
+    resultDiv.innerHTML = `<div style="padding:12px;border-radius:8px;font-size:13px;background:${success ? 'rgba(16,185,129,.1)' : 'rgba(239,68,68,.1)'};color:${success ? '#10b981' : '#ef4444'};">${escapeHtml(resp.message || (success ? 'Connection successful.' : 'Connection failed.'))}</div>`;
   } catch (err) {
-    resultDiv.innerHTML = '<div style="padding:12px;background:#fef2f2;border-radius:8px;color:#991b1b;font-size:13px;">? Connection failed: ' + escapeHtml(err.message) + '</div>';
+    resultDiv.innerHTML = `<div style="padding:12px;background:rgba(239,68,68,.1);border-radius:8px;color:#ef4444;font-size:13px;">Connection failed: ${escapeHtml(err.message)}</div>`;
   }
 };
 
@@ -6438,4 +6660,624 @@ window.renderSecuritySettings = function(...args) {
   if (typeof _origRenderSecuritySettings === 'function') _origRenderSecuritySettings.apply(this, args);
   setTimeout(() => renderLdapSettings(), 100);
 };
+
+// ══════════════════════════════════════════════════════════════════════
+// ACTIVITY FEED PAGE
+// ══════════════════════════════════════════════════════════════════════
+
+function renderActivityFeedPage() {
+  return `
+    <div class="command-shell">
+      ${renderSharedSidebar()}
+      <main class="console-main">
+        <header class="command-bar">
+          <div class="command-heading">
+            <div class="eyebrow">System Timeline</div>
+            <h2>Activity Feed</h2>
+            <p>Real-time log of all system events and operator actions.</p>
+          </div>
+          <div class="command-actions">
+            <button onclick="switchToPage('overview')" class="ghost-btn" type="button">Back to Dashboard</button>
+          </div>
+        </header>
+        <div id="activityFeedContainer" style="padding:0 28px;">
+          <div class="empty-state">Loading activity feed...</div>
+        </div>
+      </main>
+    </div>`;
+}
+
+async function loadActivityFeed() {
+  const el = document.getElementById('activityFeedContainer');
+  if (!el) return;
+  try {
+    const data = await api('/api/activity-feed?limit=100');
+    const feed = data.feed || [];
+    if (!feed.length) {
+      el.innerHTML = '<div class="empty-state">No activity recorded yet.</div>';
+      return;
+    }
+    el.innerHTML = feed.map(e => {
+      const typeColors = {
+        customer_created: '#10b981', customer_deleted: '#ef4444', customer_archived: '#f59e0b',
+        license_generated: '#6366f1', license_revoked: '#ef4444', license_extended: '#10b981',
+        login_success: '#3b82f6', login_failed: '#ef4444', operator_created: '#8b5cf6',
+        operator_deleted: '#ef4444', password_reset: '#f59e0b', smtp_tested: '#3b82f6'
+      };
+      const color = typeColors[e.type] || '#6b7280';
+      const labels = {
+        customer_created: 'Customer Created', customer_deleted: 'Customer Deleted', customer_archived: 'Customer Archived',
+        license_generated: 'License Generated', license_revoked: 'License Revoked', license_extended: 'License Extended',
+        login_success: 'Login Success', login_failed: 'Login Failed', operator_created: 'Operator Created',
+        operator_deleted: 'Operator Deleted', password_reset: 'Password Reset', smtp_tested: 'SMTP Tested',
+        gdpr_data_deletion: 'GDPR Deletion'
+      };
+      const detail = e.detail ? (typeof e.detail === 'string' ? e.detail : (e.detail.customer_name || e.detail.operator_email || JSON.stringify(e.detail).substring(0, 80))) : '';
+      return `<div style="display:flex;gap:16px;padding:16px 0;border-bottom:1px solid var(--border-light, rgba(0,0,0,.06));align-items:flex-start;">
+        <div style="width:10px;height:10px;border-radius:50%;background:${color};margin-top:6px;flex-shrink:0;"></div>
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
+            <span style="font-weight:600;font-size:13px;color:var(--text);">${escapeHtml(labels[e.type] || e.type)}</span>
+            <span style="font-size:11px;color:var(--text-muted);flex-shrink:0;">${escapeHtml(e.timestamp ? new Date(e.timestamp).toLocaleString() : '')}</span>
+          </div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">
+            <span style="color:var(--primary);font-weight:500;">${escapeHtml(e.operator)}</span>
+            ${detail ? ' — ' + escapeHtml(detail) : ''}
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  } catch (err) {
+    el.innerHTML = `<div class="empty-state" style="color:var(--danger);">Failed to load activity feed: ${escapeHtml(err.message)}</div>`;
+  }
+}
+
+window.loadActivityFeed = loadActivityFeed;
+
+// ══════════════════════════════════════════════════════════════════════
+// HEALTH SCORES PAGE
+// ══════════════════════════════════════════════════════════════════════
+
+function renderHealthScoresPage() {
+  return `
+    <div class="command-shell">
+      ${renderSharedSidebar()}
+      <main class="console-main">
+        <header class="command-bar">
+          <div class="command-heading">
+            <div class="eyebrow">Risk Assessment</div>
+            <h2>Customer Health Scores</h2>
+            <p>Composite health rating per customer based on license status, expiry, and account completeness.</p>
+          </div>
+          <div class="command-actions">
+            <button onclick="switchToPage('overview')" class="ghost-btn" type="button">Back to Dashboard</button>
+          </div>
+        </header>
+        <div id="healthScoresContainer" style="padding:0 28px;">
+          <div class="empty-state">Loading health scores...</div>
+        </div>
+      </main>
+    </div>`;
+}
+
+async function loadHealthScores() {
+  const el = document.getElementById('healthScoresContainer');
+  if (!el) return;
+  try {
+    const data = await api('/api/customers/health');
+    const customers = data.customers || [];
+    if (!customers.length) {
+      el.innerHTML = '<div class="empty-state">No customers found.</div>';
+      return;
+    }
+    const healthy = customers.filter(c => c.level === 'healthy').length;
+    const atRisk = customers.filter(c => c.level === 'at_risk').length;
+    const critical = customers.filter(c => c.level === 'critical').length;
+    el.innerHTML = `
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px;">
+        <div class="section-card" style="padding:20px;border-left:4px solid #10b981;">
+          <div style="font-size:11px;text-transform:uppercase;color:var(--text-muted);font-weight:600;">Healthy</div>
+          <div style="font-size:28px;font-weight:700;color:#10b981;">${healthy}</div>
+        </div>
+        <div class="section-card" style="padding:20px;border-left:4px solid #f59e0b;">
+          <div style="font-size:11px;text-transform:uppercase;color:var(--text-muted);font-weight:600;">At Risk</div>
+          <div style="font-size:28px;font-weight:700;color:#f59e0b;">${atRisk}</div>
+        </div>
+        <div class="section-card" style="padding:20px;border-left:4px solid #ef4444;">
+          <div style="font-size:11px;text-transform:uppercase;color:var(--text-muted);font-weight:600;">Critical</div>
+          <div style="font-size:28px;font-weight:700;color:#ef4444;">${critical}</div>
+        </div>
+      </div>
+      ${customers.map(c => {
+        const color = c.level === 'healthy' ? '#10b981' : c.level === 'at_risk' ? '#f59e0b' : '#ef4444';
+        const barWidth = c.score;
+        return `<div style="display:flex;align-items:center;gap:16px;padding:14px 0;border-bottom:1px solid var(--border-light, rgba(0,0,0,.06));">
+          <div style="width:140px;font-weight:600;font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${escapeHtml(c.customer_name)}">${escapeHtml(c.customer_name)}</div>
+          <div style="flex:1;background:var(--bg, #f9fafb);border-radius:4px;height:8px;overflow:hidden;">
+            <div style="width:${barWidth}%;height:100%;background:${color};border-radius:4px;transition:width .3s;"></div>
+          </div>
+          <div style="width:50px;text-align:right;font-weight:700;font-size:14px;color:${color};">${c.score}</div>
+          <div style="width:80px;"><span class="status-pill ${c.level === 'healthy' ? 'green' : c.level === 'at_risk' ? 'yellow' : 'red'}">${escapeHtml(c.level)}</span></div>
+          <div style="width:80px;font-size:11px;color:var(--text-muted);">${escapeHtml(c.license_status)}</div>
+        </div>`;
+      }).join('')}`;
+  } catch (err) {
+    el.innerHTML = `<div class="empty-state" style="color:var(--danger);">Failed to load health scores: ${escapeHtml(err.message)}</div>`;
+  }
+}
+
+window.loadHealthScores = loadHealthScores;
+
+// ══════════════════════════════════════════════════════════════════════
+// DEPLOYMENTS STATUS PAGE
+// ══════════════════════════════════════════════════════════════════════
+
+function renderDeploymentsPage() {
+  return `
+    <div class="command-shell">
+      ${renderSharedSidebar()}
+      <main class="console-main">
+        <header class="command-bar">
+          <div class="command-heading">
+            <div class="eyebrow">Version Map</div>
+            <h2>Deployment Status</h2>
+            <p>Track which HRMS versions customers are running and update readiness.</p>
+          </div>
+          <div class="command-actions">
+            <button onclick="switchToPage('overview')" class="ghost-btn" type="button">Back to Dashboard</button>
+          </div>
+        </header>
+        <div id="deploymentsContainer" style="padding:0 28px;">
+          <div class="empty-state">Loading deployment status...</div>
+        </div>
+      </main>
+    </div>`;
+}
+
+async function loadDeploymentStatus() {
+  const el = document.getElementById('deploymentsContainer');
+  if (!el) return;
+  try {
+    const data = await api('/api/deployments/status');
+    const versions = data.versions || [];
+    if (!versions.length) {
+      el.innerHTML = '<div class="empty-state">No deployment data found.</div>';
+      return;
+    }
+    el.innerHTML = `
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px;">
+        <div class="section-card" style="padding:20px;border-left:4px solid var(--primary, #6366f1);">
+          <div style="font-size:11px;text-transform:uppercase;color:var(--text-muted);font-weight:600;">Total Customers</div>
+          <div style="font-size:28px;font-weight:700;color:var(--primary);">${data.total || 0}</div>
+        </div>
+        <div class="section-card" style="padding:20px;border-left:4px solid #10b981;">
+          <div style="font-size:11px;text-transform:uppercase;color:var(--text-muted);font-weight:600;">Up to Date</div>
+          <div style="font-size:28px;font-weight:700;color:#10b981;">${data.up_to_date || 0}</div>
+        </div>
+        <div class="section-card" style="padding:20px;border-left:4px solid #f59e0b;">
+          <div style="font-size:11px;text-transform:uppercase;color:var(--text-muted);font-weight:600;">Needs Update</div>
+          <div style="font-size:28px;font-weight:700;color:#f59e0b;">${data.needs_update || 0}</div>
+        </div>
+      </div>
+      <div class="section-card" style="padding:20px;">
+        <h3 style="font-size:14px;font-weight:600;margin-bottom:16px;">Version Distribution</h3>
+        ${versions.map(v => {
+          const pct = data.total ? Math.round((v.count / data.total) * 100) : 0;
+          return `<div style="margin-bottom:16px;">
+            <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+              <span style="font-size:13px;font-weight:600;color:var(--text);">${escapeHtml(v.version || 'Unknown')}</span>
+              <span style="font-size:12px;color:var(--text-muted);">${v.count} customer(s) (${pct}%)</span>
+            </div>
+            <div style="background:var(--bg, #f9fafb);border-radius:4px;height:8px;overflow:hidden;">
+              <div style="width:${pct}%;height:100%;background:var(--primary, #6366f1);border-radius:4px;"></div>
+            </div>
+            <div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px;">
+              ${v.customers.map(c => `<span style="font-size:10px;padding:2px 8px;border-radius:10px;background:var(--bg, #f3f4f6);color:var(--text-muted);">${escapeHtml(c.name)}</span>`).join('')}
+            </div>
+          </div>`;
+        }).join('')}
+      </div>`;
+  } catch (err) {
+    el.innerHTML = `<div class="empty-state" style="color:var(--danger);">Failed to load deployment status: ${escapeHtml(err.message)}</div>`;
+  }
+}
+
+window.loadDeploymentStatus = loadDeploymentStatus;
+
+// ══════════════════════════════════════════════════════════════════════
+// EMAIL CAMPAIGNS PAGE
+// ══════════════════════════════════════════════════════════════════════
+
+function renderCampaignsPage() {
+  return `
+    <div class="command-shell">
+      ${renderSharedSidebar()}
+      <main class="console-main">
+        <header class="command-bar">
+          <div class="command-heading">
+            <div class="eyebrow">Email Outreach</div>
+            <h2>Campaigns</h2>
+            <p>Send bulk emails to customers and track campaign history.</p>
+          </div>
+          <div class="command-actions">
+            <button onclick="switchToPage('overview')" class="ghost-btn" type="button">Back to Dashboard</button>
+          </div>
+        </header>
+        <div style="padding:0 28px;display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+          <div class="section-card" style="padding:20px;">
+            <h3 style="font-size:14px;font-weight:600;margin-bottom:16px;">New Campaign</h3>
+            <div class="field">
+              <label class="field-label">Campaign Name</label>
+              <input type="text" id="campaignName" class="surface-input" placeholder="e.g. Q3 Renewal Push">
+            </div>
+            <div class="field">
+              <label class="field-label">Subject</label>
+              <input type="text" id="campaignSubject" class="surface-input" placeholder="Email subject line">
+            </div>
+            <div class="field">
+              <label class="field-label">Message (HTML supported)</label>
+              <textarea id="campaignMessage" class="surface-textarea" rows="5" placeholder="Email body content..."></textarea>
+            </div>
+            <div class="field">
+              <label class="field-label">Recipients</label>
+              <div id="campaignRecipients" style="max-height:200px;overflow-y:auto;border:1px solid var(--border-light, rgba(0,0,0,.1));border-radius:6px;padding:8px;">
+                <label style="display:flex;align-items:center;gap:8px;padding:4px 0;cursor:pointer;font-size:12px;">
+                  <input type="checkbox" id="campaignSelectAll" onchange="toggleCampaignSelectAll()" style="accent-color:var(--primary);"> Select All Customers
+                </label>
+              </div>
+            </div>
+            <button onclick="sendCampaign()" class="primary-btn" style="width:100%;padding:10px 0;margin-top:8px;">Send Campaign</button>
+          </div>
+          <div class="section-card" style="padding:20px;max-height:calc(100vh - 200px);overflow-y:auto;">
+            <h3 style="font-size:14px;font-weight:600;margin-bottom:16px;">Campaign History</h3>
+            <div id="campaignHistory">
+              <div class="empty-state">Loading campaigns...</div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>`;
+}
+
+async function loadCampaigns() {
+  const recipientsEl = document.getElementById('campaignRecipients');
+  const historyEl = document.getElementById('campaignHistory');
+  if (!recipientsEl || !historyEl) return;
+  try {
+    const customers = state.customers || [];
+    const existing = recipientsEl.querySelectorAll('label[data-cid]').length;
+    if (existing === 0 && customers.length) {
+      const checkHtml = customers.map(c => `<label data-cid="${c.id}" style="display:flex;align-items:center;gap:8px;padding:4px 0;cursor:pointer;font-size:12px;"><input type="checkbox" value="${c.id}" class="campaign-cb" style="accent-color:var(--primary);"> ${escapeHtml(c.legal_name)} <span style="color:var(--text-muted);font-size:10px;">${escapeHtml(c.contact_email || '')}</span></label>`).join('');
+      recipientsEl.insertAdjacentHTML('beforeend', checkHtml);
+    }
+  } catch (_) {}
+  try {
+    const data = await api('/api/campaigns');
+    const campaigns = data.campaigns || [];
+    if (!campaigns.length) {
+      historyEl.innerHTML = '<div class="empty-state">No campaigns sent yet.</div>';
+      return;
+    }
+    historyEl.innerHTML = campaigns.map(c => `<div style="padding:12px 0;border-bottom:1px solid var(--border-light, rgba(0,0,0,.06));">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-weight:600;font-size:13px;">${escapeHtml(c.name)}</span>
+        <span style="font-size:11px;color:var(--text-muted);">${escapeHtml(c.created_at ? new Date(c.created_at).toLocaleDateString() : '')}</span>
+      </div>
+      <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">Sent: ${c.sent || 0} | Failed: ${c.failed || 0} | Total: ${c.total || 0}</div>
+    </div>`).join('');
+  } catch (err) {
+    historyEl.innerHTML = `<div class="empty-state" style="color:var(--danger);">${escapeHtml(err.message)}</div>`;
+  }
+}
+
+function toggleCampaignSelectAll() {
+  const checked = document.getElementById('campaignSelectAll')?.checked;
+  document.querySelectorAll('.campaign-cb').forEach(cb => { cb.checked = checked; });
+}
+
+async function sendCampaign() {
+  const name = document.getElementById('campaignName')?.value?.trim();
+  const subject = document.getElementById('campaignSubject')?.value?.trim();
+  const message = document.getElementById('campaignMessage')?.value?.trim();
+  if (!name || !subject || !message) { showToast('Name, subject, and message are required.', 'error'); return; }
+  const ids = [...document.querySelectorAll('.campaign-cb:checked')].map(cb => cb.value);
+  if (!ids.length) { showToast('Select at least one recipient.', 'error'); return; }
+  try {
+    const result = await api('/api/campaigns', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, subject, message, customer_ids: ids }) });
+    showToast(result.message || 'Campaign sent.', 'success');
+    document.getElementById('campaignName').value = '';
+    document.getElementById('campaignSubject').value = '';
+    document.getElementById('campaignMessage').value = '';
+    loadCampaigns();
+  } catch (err) { showToast(err.message, 'error'); }
+}
+
+window.loadCampaigns = loadCampaigns;
+window.toggleCampaignSelectAll = toggleCampaignSelectAll;
+window.sendCampaign = sendCampaign;
+
+// ══════════════════════════════════════════════════════════════════════
+// REPORTS PAGE
+// ══════════════════════════════════════════════════════════════════════
+
+function renderReportsPage() {
+  return `
+    <div class="command-shell">
+      ${renderSharedSidebar()}
+      <main class="console-main">
+        <header class="command-bar">
+          <div class="command-heading">
+            <div class="eyebrow">Intelligence</div>
+            <h2>Reports</h2>
+            <p>Generate and download summary reports for customers, licenses, and plans.</p>
+          </div>
+          <div class="command-actions">
+            <button onclick="switchToPage('overview')" class="ghost-btn" type="button">Back to Dashboard</button>
+          </div>
+        </header>
+        <div id="reportsContainer" style="padding:0 28px;">
+          <div class="empty-state">Loading report data...</div>
+        </div>
+      </main>
+    </div>`;
+}
+
+async function loadReportSummary() {
+  const el = document.getElementById('reportsContainer');
+  if (!el) return;
+  try {
+    const data = await api('/api/reports/summary');
+    const plans = data.by_plan || {};
+    const statuses = data.by_status || {};
+    const lic = data.licenses || {};
+    el.innerHTML = `
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;">
+        <div class="section-card" style="padding:20px;border-left:4px solid var(--primary, #6366f1);">
+          <div style="font-size:11px;text-transform:uppercase;color:var(--text-muted);font-weight:600;">Total Customers</div>
+          <div style="font-size:28px;font-weight:700;color:var(--primary);">${data.total_customers || 0}</div>
+        </div>
+        <div class="section-card" style="padding:20px;border-left:4px solid #10b981;">
+          <div style="font-size:11px;text-transform:uppercase;color:var(--text-muted);font-weight:600;">Active Licenses</div>
+          <div style="font-size:28px;font-weight:700;color:#10b981;">${lic.active || 0}</div>
+        </div>
+        <div class="section-card" style="padding:20px;border-left:4px solid #f59e0b;">
+          <div style="font-size:11px;text-transform:uppercase;color:var(--text-muted);font-weight:600;">Expired</div>
+          <div style="font-size:28px;font-weight:700;color:#f59e0b;">${lic.expired || 0}</div>
+        </div>
+        <div class="section-card" style="padding:20px;border-left:4px solid #ef4444;">
+          <div style="font-size:11px;text-transform:uppercase;color:var(--text-muted);font-weight:600;">Revoked</div>
+          <div style="font-size:28px;font-weight:700;color:#ef4444;">${lic.revoked || 0}</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+        <div class="section-card" style="padding:20px;">
+          <h3 style="font-size:14px;font-weight:600;margin-bottom:12px;">Customers by Plan</h3>
+          ${Object.keys(plans).map(p => `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border-light, rgba(0,0,0,.06));font-size:13px;"><span style="text-transform:capitalize;">${escapeHtml(p)}</span><span style="font-weight:600;">${plans[p]}</span></div>`).join('') || '<div style="color:var(--text-muted);font-size:12px;">No data</div>'}
+        </div>
+        <div class="section-card" style="padding:20px;">
+          <h3 style="font-size:14px;font-weight:600;margin-bottom:12px;">Customers by Status</h3>
+          ${Object.keys(statuses).map(s => `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border-light, rgba(0,0,0,.06));font-size:13px;"><span style="text-transform:capitalize;">${escapeHtml(s)}</span><span style="font-weight:600;">${statuses[s]}</span></div>`).join('') || '<div style="color:var(--text-muted);font-size:12px;">No data</div>'}
+        </div>
+      </div>
+      <div style="margin-top:20px;">
+        <button onclick="downloadReport()" class="secondary-btn" type="button">Download Full Report (JSON)</button>
+      </div>`;
+  } catch (err) {
+    el.innerHTML = `<div class="empty-state" style="color:var(--danger);">Failed to load reports: ${escapeHtml(err.message)}</div>`;
+  }
+}
+
+async function downloadReport() {
+  try {
+    const data = await api('/api/reports/summary');
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `report_${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    showToast('Report downloaded.', 'success');
+  } catch (err) { showToast(err.message, 'error'); }
+}
+
+window.loadReportSummary = loadReportSummary;
+window.downloadReport = downloadReport;
+
+// ══════════════════════════════════════════════════════════════════════
+// WEBHOOKS PAGE
+// ══════════════════════════════════════════════════════════════════════
+
+function renderWebhooksPage() {
+  return `
+    <div class="command-shell">
+      ${renderSharedSidebar()}
+      <main class="console-main">
+        <header class="command-bar">
+          <div class="command-heading">
+            <div class="eyebrow">Integrations</div>
+            <h2>Webhooks</h2>
+            <p>Configure HTTP webhook endpoints for event notifications.</p>
+          </div>
+          <div class="command-actions">
+            <button onclick="switchToPage('overview')" class="ghost-btn" type="button">Back to Dashboard</button>
+          </div>
+        </header>
+        <div style="padding:0 28px;display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+          <div class="section-card" style="padding:20px;">
+            <h3 style="font-size:14px;font-weight:600;margin-bottom:16px;">Add Webhook</h3>
+            <div class="field">
+              <label class="field-label">Endpoint URL</label>
+              <input type="url" id="webhookUrl" class="surface-input" placeholder="https://your-server.com/webhook">
+            </div>
+            <div class="field">
+              <label class="field-label">Events (comma-separated)</label>
+              <input type="text" id="webhookEvents" class="surface-input" value="license_generated, license_revoked, customer_created" placeholder="license_generated, license_revoked, customer_created">
+            </div>
+            <div style="display:flex;gap:8px;margin-top:12px;">
+              <button onclick="createWebhook()" class="primary-btn" style="flex:1;">Add Webhook</button>
+              <button onclick="testWebhook()" class="secondary-btn" style="flex:1;">Test Connection</button>
+            </div>
+          </div>
+          <div class="section-card" style="padding:20px;max-height:calc(100vh - 200px);overflow-y:auto;">
+            <h3 style="font-size:14px;font-weight:600;margin-bottom:16px;">Registered Webhooks</h3>
+            <div id="webhooksList">
+              <div class="empty-state">Loading webhooks...</div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>`;
+}
+
+async function loadWebhooks() {
+  const el = document.getElementById('webhooksList');
+  if (!el) return;
+  try {
+    const data = await api('/api/webhooks');
+    const webhooks = data.webhooks || [];
+    if (!webhooks.length) {
+      el.innerHTML = '<div class="empty-state">No webhooks configured.</div>';
+      return;
+    }
+    el.innerHTML = webhooks.map(w => `<div style="padding:12px;border:1px solid var(--border-light, rgba(0,0,0,.08));border-radius:8px;margin-bottom:8px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:13px;font-weight:600;word-break:break-all;">${escapeHtml(w.url)}</span>
+        <button onclick="deleteWebhook('${w.id}')" class="ghost-btn" style="font-size:11px;color:var(--danger);flex-shrink:0;">Delete</button>
+      </div>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Events: ${escapeHtml((w.events || []).join(', '))}</div>
+      <div style="font-size:11px;color:var(--text-muted);">Created: ${escapeHtml(w.created_at ? new Date(w.created_at).toLocaleDateString() : '')}</div>
+    </div>`).join('');
+  } catch (err) {
+    el.innerHTML = `<div class="empty-state" style="color:var(--danger);">${escapeHtml(err.message)}</div>`;
+  }
+}
+
+async function createWebhook() {
+  const url = document.getElementById('webhookUrl')?.value?.trim();
+  if (!url) { showToast('URL is required.', 'error'); return; }
+  const events = (document.getElementById('webhookEvents')?.value || '').split(',').map(e => e.trim()).filter(Boolean);
+  try {
+    await api('/api/webhooks', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url, events }) });
+    showToast('Webhook created.', 'success');
+    document.getElementById('webhookUrl').value = '';
+    loadWebhooks();
+  } catch (err) { showToast(err.message, 'error'); }
+}
+
+async function testWebhook() {
+  const url = document.getElementById('webhookUrl')?.value?.trim();
+  if (!url) { showToast('Enter a URL to test.', 'error'); return; }
+  try {
+    const result = await api('/api/webhooks/test', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url }) });
+    showToast(result.message || (result.success ? 'Connection successful.' : 'Test failed.'), result.success ? 'success' : 'error');
+  } catch (err) { showToast(err.message, 'error'); }
+}
+
+async function deleteWebhook(id) {
+  if (!confirm('Delete this webhook?')) return;
+  try {
+    await api(`/api/webhooks/${id}`, { method: 'DELETE' });
+    showToast('Webhook deleted.', 'success');
+    loadWebhooks();
+  } catch (err) { showToast(err.message, 'error'); }
+}
+
+window.loadWebhooks = loadWebhooks;
+window.createWebhook = createWebhook;
+window.testWebhook = testWebhook;
+window.deleteWebhook = deleteWebhook;
+
+// ══════════════════════════════════════════════════════════════════════
+// CUSTOMER SELF-SERVICE PORTAL PAGE
+// ══════════════════════════════════════════════════════════════════════
+
+function renderSelfServicePage() {
+  const customers = state.customers || [];
+  return `
+    <div class="command-shell">
+      ${renderSharedSidebar()}
+      <main class="console-main">
+        <header class="command-bar">
+          <div class="command-heading">
+            <div class="eyebrow">Customer View</div>
+            <h2>Customer Self-Service Portal</h2>
+            <p>Preview what customers see when they access their portal. Select a customer to view their portal data.</p>
+          </div>
+          <div class="command-actions">
+            <button onclick="switchToPage('overview')" class="ghost-btn" type="button">Back to Dashboard</button>
+          </div>
+        </header>
+        <div style="padding:0 28px;">
+          <div class="section-card" style="padding:20px;margin-bottom:20px;">
+            <div class="field" style="max-width:400px;">
+              <label class="field-label">Select Customer</label>
+              <select id="portalCustomerSelect" class="surface-input" onchange="loadCustomerPortal(this.value)">
+                <option value="">— Choose a customer —</option>
+                ${customers.map(c => `<option value="${c.id}">${escapeHtml(c.legal_name)}</option>`).join('')}
+              </select>
+            </div>
+          </div>
+          <div id="customerPortalData">
+            <div class="empty-state">Select a customer to view their portal data.</div>
+          </div>
+        </div>
+      </main>
+    </div>`;
+}
+
+async function loadCustomerPortal(customerId) {
+  const el = document.getElementById('customerPortalData');
+  if (!el) return;
+  if (!customerId) {
+    el.innerHTML = '<div class="empty-state">Select a customer to view their portal data.</div>';
+    return;
+  }
+  el.innerHTML = '<div class="empty-state">Loading customer portal data...</div>';
+  try {
+    const data = await api(`/api/customer-portal/${customerId}`);
+    const c = data.customer;
+    const lic = data.active_license;
+    const hist = data.license_history || [];
+    el.innerHTML = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+        <div class="section-card" style="padding:20px;">
+          <h3 style="font-size:14px;font-weight:600;margin-bottom:16px;">Account Details</h3>
+          <div style="font-size:13px;line-height:2;">
+            <div><span style="color:var(--text-muted);">Company:</span> <strong>${escapeHtml(c.legal_name)}</strong></div>
+            <div><span style="color:var(--text-muted);">Plan:</span> <strong style="text-transform:capitalize;">${escapeHtml(c.plan)}</strong></div>
+            <div><span style="color:var(--text-muted);">Status:</span> <span class="status-pill ${c.status === 'active' ? 'green' : 'yellow'}">${escapeHtml(c.status)}</span></div>
+            <div><span style="color:var(--text-muted);">HRMS Version:</span> ${escapeHtml(c.hrms_version || 'Not deployed')}</div>
+            <div><span style="color:var(--text-muted);">Update Status:</span> <span class="status-pill ${c.update_status === 'current' ? 'green' : 'yellow'}">${escapeHtml(c.update_status || 'current')}</span></div>
+            <div><span style="color:var(--text-muted);">Renewal Date:</span> ${escapeHtml(c.renewal_date || 'Not set')}</div>
+          </div>
+        </div>
+        <div class="section-card" style="padding:20px;">
+          <h3 style="font-size:14px;font-weight:600;margin-bottom:16px;">Active License</h3>
+          ${lic ? `<div style="font-size:13px;line-height:2;">
+            <div><span style="color:var(--text-muted);">Plan:</span> <strong style="text-transform:capitalize;">${escapeHtml(lic.plan)}</strong></div>
+            <div><span style="color:var(--text-muted);">Status:</span> <span class="status-pill ${lic.status === 'active' ? 'green' : 'red'}">${escapeHtml(lic.status)}</span></div>
+            <div><span style="color:var(--text-muted);">Expires:</span> ${escapeHtml(lic.expires_at ? new Date(lic.expires_at).toLocaleDateString() : 'N/A')}</div>
+            <div><span style="color:var(--text-muted);">Days Remaining:</span> ${lic.days_remaining != null ? lic.days_remaining + ' days' : 'N/A'}</div>
+            <div><span style="color:var(--text-muted);">Hardware ID:</span> ${escapeHtml(lic.hardware_id || 'Unbound')}</div>
+          </div>` : '<div style="color:var(--text-muted);font-size:13px;">No active license.</div>'}
+        </div>
+      </div>
+      <div class="section-card" style="padding:20px;margin-top:20px;">
+        <h3 style="font-size:14px;font-weight:600;margin-bottom:12px;">License History (${hist.length} total)</h3>
+        ${hist.length ? hist.map(l => `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border-light, rgba(0,0,0,.06));font-size:12px;">
+          <span style="text-transform:capitalize;">${escapeHtml(l.plan)}</span>
+          <span class="status-pill ${l.status === 'active' ? 'green' : l.status === 'revoked' ? 'red' : 'yellow'}" style="font-size:10px;">${escapeHtml(l.status)}</span>
+          <span style="color:var(--text-muted);">${escapeHtml(l.generated_at ? new Date(l.generated_at).toLocaleDateString() : '')}</span>
+          <span style="color:var(--text-muted);">${l.expires_at ? 'Exp: ' + new Date(l.expires_at).toLocaleDateString() : ''}</span>
+        </div>`).join('') : '<div style="color:var(--text-muted);font-size:12px;">No license history.</div>'}
+      </div>`;
+  } catch (err) {
+    el.innerHTML = `<div class="empty-state" style="color:var(--danger);">Failed to load portal data: ${escapeHtml(err.message)}</div>`;
+  }
+}
+
+window.loadCustomerPortal = loadCustomerPortal;
 

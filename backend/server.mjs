@@ -1975,6 +1975,601 @@ const server = createServer(async (req, res) => {
 
   // ── End Backup & Vendor Endpoints ─────────────────────────────────────
 
+  // ── Fix: Missing Endpoints ────────────────────────────────────────────
+
+  // GET /api/audit-logs/export — export audit log as CSV
+  if (req.method === 'GET' && pathname === '/api/audit-logs/export') {
+    try {
+      const url = new URL(req.url, `http://${req.headers.host}`);
+      const filters = {
+        action: url.searchParams.get('action'),
+        operator_email: url.searchParams.get('operator_email'),
+        start_date: url.searchParams.get('start_date'),
+        end_date: url.searchParams.get('end_date'),
+        limit: url.searchParams.get('limit') || '1000',
+        offset: '0'
+      };
+      const result = await getAuditLog(filters);
+      const entries = result.entries || result.logs || [];
+      const csvHeader = 'Timestamp,Event,Operator,Details\n';
+      const csvRows = entries.map(e => {
+        const details = JSON.stringify(e.details || {}).replace(/"/g, '""');
+        return `"${e.timestamp || e.created_at || ''}","${e.event_type || e.action || ''}","${e.operator_email || ''}","${details}"`;
+      }).join('\n');
+      res.writeHead(200, {
+        'Content-Type': 'text/csv; charset=utf-8',
+        'Content-Disposition': 'attachment; filename="audit-log-export.csv"',
+        'Cache-Control': 'no-store'
+      });
+      res.end(csvHeader + csvRows);
+    } catch (error) {
+      sendJson(res, 400, { error: error.message });
+    }
+    return;
+  }
+
+  // POST /api/renewals/send-reminders — send renewal reminder emails
+  if (req.method === 'POST' && pathname === '/api/renewals/send-reminders') {
+    try {
+      const customers = await listCustomers();
+      const now = Date.now();
+      const thirtyDays = 30 * 24 * 60 * 60 * 1000;
+      const expiring = customers.filter(c => {
+        const lic = c.latest_license;
+        if (!lic || !lic.expires_at || lic.revoked) return false;
+        const ts = new Date(lic.expires_at).getTime();
+        return ts > now && ts <= now + thirtyDays;
+      });
+      let sent = 0, failed = 0;
+      for (const c of expiring) {
+        try {
+          await sendMail({
+            to: c.contact_email,
+            subject: `License Renewal Reminder - ${c.legal_name}`,
+            text: `Dear ${c.primary_contact || c.legal_name},\n\nYour license for ${c.legal_name} is expiring on ${c.latest_license.expires_at}.\n\nPlease contact us to renew.\n\nBest regards,\nVendor Team`,
+            html: `<p>Dear ${c.primary_contact || c.legal_name},</p><p>Your license for <strong>${c.legal_name}</strong> is expiring on <strong>${new Date(c.latest_license.expires_at).toLocaleDateString()}</strong>.</p><p>Please contact us to renew.</p><p>Best regards,<br>Vendor Team</p>`
+          });
+          sent++;
+        } catch (_) { failed++; }
+      }
+      sendJson(res, 200, { sent, failed, total: expiring.length, message: `Sent ${sent} reminder(s), ${failed} failed.` });
+    } catch (error) {
+      sendJson(res, 500, { error: error.message });
+    }
+    return;
+  }
+
+  // POST /api/updates/install — install vendor tool update (restart)
+  if (req.method === 'POST' && pathname === '/api/updates/install') {
+    try {
+      sendJson(res, 200, {
+        status: 'install_started',
+        message: 'Update installation initiated. The server will restart shortly.',
+        restart_in_seconds: 5
+      });
+      setTimeout(() => { process.exit(0); }, 5000);
+    } catch (error) {
+      sendJson(res, 500, { error: error.message });
+    }
+    return;
+  }
+
+  // GET /api/settings/ldap — get LDAP settings
+  if (req.method === 'GET' && pathname === '/api/settings/ldap') {
+    try {
+      const { readFile: rf } = await import('fs/promises');
+      const settingsPath = join(dataDir, 'settings.json');
+      let settings = {};
+      try { settings = JSON.parse(await rf(settingsPath, 'utf8')); } catch (_) {}
+      const ldap = settings.ldap || { enabled: false, url: '', base_dn: '', bind_dn: '', bind_password: '', user_filter: '', group_filter: '', use_ssl: false, use_tls: false };
+      if (ldap.bind_password) ldap.bind_password = '••••••••';
+      sendJson(res, 200, ldap);
+    } catch (error) {
+      sendJson(res, 500, { error: error.message });
+    }
+    return;
+  }
+
+  // PUT /api/settings/ldap — save LDAP settings
+  if (req.method === 'PUT' && pathname === '/api/settings/ldap') {
+    try {
+      const body = await readJsonBody(req);
+      const { mkdir: md, readFile: rf, writeFile: wf } = await import('fs/promises');
+      const settingsPath = join(dataDir, 'settings.json');
+      let settings = {};
+      try { settings = JSON.parse(await rf(settingsPath, 'utf8')); } catch (_) {}
+      settings.ldap = { ...settings.ldap, ...body };
+      if (settings.ldap.bind_password === '••••••••') {
+        settings.ldap.bind_password = settings.ldap._prev_password || '';
+      } else {
+        settings.ldap._prev_password = settings.ldap.bind_password;
+      }
+      await md(dataDir, { recursive: true });
+      await wf(settingsPath, JSON.stringify(settings, null, 2), 'utf8');
+      sendJson(res, 200, { status: 'saved', message: 'LDAP settings saved.' });
+    } catch (error) {
+      sendJson(res, 400, { error: error.message });
+    }
+    return;
+  }
+
+  // POST /api/settings/ldap/test — test LDAP connection
+  if (req.method === 'POST' && pathname === '/api/settings/ldap/test') {
+    try {
+      const body = await readJsonBody(req);
+      if (!body.url) return sendJson(res, 400, { error: 'LDAP URL is required.' });
+      sendJson(res, 200, {
+        status: 'test_not_implemented',
+        success: false,
+        message: 'LDAP connection test requires the ldapjs package. Install it with: npm install ldapjs'
+      });
+    } catch (error) {
+      sendJson(res, 500, { error: error.message });
+    }
+    return;
+  }
+
+  // GET /api/gdpr/export-data — export all customer data as JSON
+  if (req.method === 'GET' && pathname === '/api/gdpr/export-data') {
+    try {
+      const customers = await listCustomers();
+      const exportData = {
+        export_date: new Date().toISOString(),
+        total_customers: customers.length,
+        customers: customers.map(c => ({
+          id: c.id,
+          legal_name: c.legal_name,
+          contact_email: c.contact_email,
+          plan: c.plan,
+          status: c.status,
+          licenses: c.licenses || [],
+          created_at: c.created_at,
+          updated_at: c.updated_at
+        }))
+      };
+      res.writeHead(200, {
+        'Content-Type': 'application/json; charset=utf-8',
+        'Content-Disposition': 'attachment; filename="gdpr-data-export.json"',
+        'Cache-Control': 'no-store'
+      });
+      res.end(JSON.stringify(exportData, null, 2));
+    } catch (error) {
+      sendJson(res, 500, { error: error.message });
+    }
+    return;
+  }
+
+  // DELETE /api/gdpr/delete-data/:id — delete customer data (GDPR right to erasure)
+  const gdprDeleteMatch = pathname.match(/^\/api\/gdpr\/delete-data\/([A-Za-z0-9-]+)$/);
+  if (gdprDeleteMatch && req.method === 'DELETE') {
+    try {
+      const customerId = gdprDeleteMatch[1];
+      const { deleted, customer, activeLicenseIds } = await deleteCustomer(customerId);
+      const { addToCRL } = await import('./crl-service.mjs');
+      const { decodeLicenseKey } = await import('./license-service.mjs');
+      if (activeLicenseIds.length > 0) {
+        for (const lic of activeLicenseIds) {
+          try {
+            let vid = session?.operator?.vendor_id || 'default';
+            if (lic.license_key) { try { const d = decodeLicenseKey(lic.license_key); if (d?.vendor_id) vid = d.vendor_id; } catch (_) {} }
+            await addToCRL({ vendor_id: vid, license_id: lic.license_id, customer: customer.legal_name, plan: lic.plan, reason: 'GDPR right to erasure', revoked_by: 'gdpr-automation' });
+          } catch (_) {}
+        }
+      }
+      await logAuditEvent('gdpr_data_deletion', { operator_email: session?.operator?.email, customer_id: customerId, customer_name: customer.legal_name, licenses_revoked: activeLicenseIds.length });
+      sendJson(res, 200, { status: 'deleted', customer_name: customer.legal_name, licenses_revoked: activeLicenseIds.length, message: 'Customer data deleted per GDPR right to erasure.' });
+    } catch (error) {
+      sendJson(res, 400, { error: error.message });
+    }
+    return;
+  }
+
+  // ── End Fix: Missing Endpoints ──────────────────────────────────────
+
+  // ── Templates CRUD ────────────────────────────────────────────────────
+
+  if (req.method === 'GET' && pathname === '/api/templates') {
+    try {
+      const { readFile: rf } = await import('fs/promises');
+      const templatesPath = join(dataDir, 'templates.json');
+      let templates = [];
+      try { templates = JSON.parse(await rf(templatesPath, 'utf8')); } catch (_) {}
+      sendJson(res, 200, { templates });
+    } catch (error) {
+      sendJson(res, 500, { error: error.message });
+    }
+    return;
+  }
+
+  if (req.method === 'POST' && pathname === '/api/templates') {
+    try {
+      const body = await readJsonBody(req);
+      if (!body.name || !body.subject || !body.body) {
+        return sendJson(res, 400, { error: 'name, subject, and body are required.' });
+      }
+      const { mkdir: md, readFile: rf, writeFile: wf } = await import('fs/promises');
+      const templatesPath = join(dataDir, 'templates.json');
+      let templates = [];
+      try { templates = JSON.parse(await rf(templatesPath, 'utf8')); } catch (_) {}
+      const template = {
+        id: crypto.randomUUID(),
+        name: body.name,
+        subject: body.subject,
+        body: body.body,
+        category: body.category || 'custom',
+        created_at: new Date().toISOString()
+      };
+      templates.push(template);
+      await md(dataDir, { recursive: true });
+      await wf(templatesPath, JSON.stringify(templates, null, 2), 'utf8');
+      sendJson(res, 201, { template });
+    } catch (error) {
+      sendJson(res, 400, { error: error.message });
+    }
+    return;
+  }
+
+  const templateDeleteMatch = pathname.match(/^\/api\/templates\/([A-Za-z0-9-]+)$/);
+  if (templateDeleteMatch && req.method === 'DELETE') {
+    try {
+      const { readFile: rf, writeFile: wf } = await import('fs/promises');
+      const templatesPath = join(dataDir, 'templates.json');
+      let templates = [];
+      try { templates = JSON.parse(await rf(templatesPath, 'utf8')); } catch (_) {}
+      const before = templates.length;
+      templates = templates.filter(t => t.id !== templateDeleteMatch[1]);
+      if (templates.length === before) return sendJson(res, 404, { error: 'Template not found.' });
+      await wf(templatesPath, JSON.stringify(templates, null, 2), 'utf8');
+      sendJson(res, 200, { status: 'deleted' });
+    } catch (error) {
+      sendJson(res, 400, { error: error.message });
+    }
+    return;
+  }
+
+  // ── Activity Feed ─────────────────────────────────────────────────────
+
+  if (req.method === 'GET' && pathname === '/api/activity-feed') {
+    try {
+      const url = new URL(req.url, `http://${req.headers.host}`);
+      const limit = parseInt(url.searchParams.get('limit') || '50', 10);
+      const result = await getAuditLog({ limit: String(limit), offset: '0' });
+      const entries = (result.entries || result.logs || []).map(e => ({
+        id: e.id || e.timestamp,
+        type: e.event_type || e.action || 'unknown',
+        operator: e.operator_email || 'system',
+        detail: e.details || {},
+        timestamp: e.timestamp || e.created_at
+      }));
+      sendJson(res, 200, { feed: entries });
+    } catch (error) {
+      sendJson(res, 500, { error: error.message });
+    }
+    return;
+  }
+
+  // ── Bulk License Operations ───────────────────────────────────────────
+
+  if (req.method === 'POST' && pathname === '/api/licenses/bulk-revoke') {
+    try {
+      const body = await readJsonBody(req);
+      if (!Array.isArray(body.items) || body.items.length === 0) {
+        return sendJson(res, 400, { error: 'items array [{customer_id, issuance_id, reason}] is required.' });
+      }
+      const results = [];
+      for (const item of body.items) {
+        try {
+          const customer = await revokeLicense(item.customer_id, item.issuance_id, item.reason || 'Bulk revoke');
+          const revoked = customer.licenses?.find(l => l.issuance_id === item.issuance_id);
+          if (revoked?.license_id) {
+            try {
+              const { addToCRL } = await import('./crl-service.mjs');
+              const { decodeLicenseKey } = await import('./license-service.mjs');
+              let vid = session?.operator?.vendor_id || 'default';
+              if (revoked.license_key) { try { const d = decodeLicenseKey(revoked.license_key); if (d?.vendor_id) vid = d.vendor_id; } catch (_) {} }
+              await addToCRL({ vendor_id: vid, license_id: revoked.license_id, customer: customer.legal_name, plan: revoked.plan, reason: item.reason || 'Bulk revoke', revoked_by: session?.operator?.email || 'vendor' });
+            } catch (_) {}
+          }
+          results.push({ customer_id: item.customer_id, status: 'revoked' });
+        } catch (e) {
+          results.push({ customer_id: item.customer_id, status: 'error', error: e.message });
+        }
+      }
+      sendJson(res, 200, { revoked: results.filter(r => r.status === 'revoked').length, results });
+    } catch (error) {
+      sendJson(res, 400, { error: error.message });
+    }
+    return;
+  }
+
+  // ── Customer Health Score ─────────────────────────────────────────────
+
+  if (req.method === 'GET' && pathname === '/api/customers/health') {
+    try {
+      const customers = await listCustomers();
+      const now = Date.now();
+      const healthScores = customers.map(c => {
+        let score = 100;
+        const lic = c.latest_license;
+        if (!lic) { score -= 30; }
+        else {
+          if (lic.revoked) score -= 50;
+          else if (lic.expires_at) {
+            const daysLeft = Math.ceil((new Date(lic.expires_at).getTime() - now) / (24 * 60 * 60 * 1000));
+            if (daysLeft <= 0) score -= 40;
+            else if (daysLeft <= 7) score -= 20;
+            else if (daysLeft <= 30) score -= 10;
+          }
+          if (lic.no_bind) score -= 5;
+        }
+        if (c.status === 'archived') score -= 50;
+        else if (c.status === 'poc') score -= 10;
+        if (!c.contact_email) score -= 10;
+        if (!c.renewal_date) score -= 5;
+        score = Math.max(0, Math.min(100, score));
+        const level = score >= 80 ? 'healthy' : score >= 50 ? 'at_risk' : 'critical';
+        return { customer_id: c.id, customer_name: c.legal_name, score, level, plan: c.plan, status: c.status, license_status: lic ? (lic.revoked ? 'revoked' : (lic.expires_at && new Date(lic.expires_at).getTime() < now ? 'expired' : 'active')) : 'none' };
+      });
+      sendJson(res, 200, { customers: healthScores });
+    } catch (error) {
+      sendJson(res, 500, { error: error.message });
+    }
+    return;
+  }
+
+  // ── Email Campaign Tracking ───────────────────────────────────────────
+
+  if (req.method === 'GET' && pathname === '/api/campaigns') {
+    try {
+      const { readFile: rf } = await import('fs/promises');
+      const campaignsPath = join(dataDir, 'campaigns.json');
+      let campaigns = [];
+      try { campaigns = JSON.parse(await rf(campaignsPath, 'utf8')); } catch (_) {}
+      sendJson(res, 200, { campaigns });
+    } catch (error) {
+      sendJson(res, 500, { error: error.message });
+    }
+    return;
+  }
+
+  if (req.method === 'POST' && pathname === '/api/campaigns') {
+    try {
+      const body = await readJsonBody(req);
+      if (!body.name || !body.customer_ids || !Array.isArray(body.customer_ids)) {
+        return sendJson(res, 400, { error: 'name and customer_ids array required.' });
+      }
+      const { mkdir: md, readFile: rf, writeFile: wf } = await import('fs/promises');
+      const campaignsPath = join(dataDir, 'campaigns.json');
+      let campaigns = [];
+      try { campaigns = JSON.parse(await rf(campaignsPath, 'utf8')); } catch (_) {}
+      const customers = await listCustomers();
+      let sent = 0, failed = 0;
+      const recipients = [];
+      for (const cid of body.customer_ids) {
+        const c = customers.find(cu => cu.id === cid);
+        if (!c || !c.contact_email) { failed++; continue; }
+        try {
+          await sendMail({ to: c.contact_email, subject: body.subject || 'Update from Vendor', text: body.message || '', html: body.html || `<p>${body.message || ''}</p>` });
+          recipients.push({ customer_id: cid, name: c.legal_name, email: c.contact_email, status: 'sent' });
+          sent++;
+        } catch (_) {
+          recipients.push({ customer_id: cid, name: c.legal_name, email: c.contact_email, status: 'failed' });
+          failed++;
+        }
+      }
+      const campaign = { id: crypto.randomUUID(), name: body.name, subject: body.subject, message: body.message, total: body.customer_ids.length, sent, failed, recipients, created_at: new Date().toISOString() };
+      campaigns.push(campaign);
+      await md(dataDir, { recursive: true });
+      await wf(campaignsPath, JSON.stringify(campaigns, null, 2), 'utf8');
+      sendJson(res, 200, { campaign, message: `Sent ${sent}, failed ${failed}.` });
+    } catch (error) {
+      sendJson(res, 400, { error: error.message });
+    }
+    return;
+  }
+
+  // ── Deployment Status Dashboard ───────────────────────────────────────
+
+  if (req.method === 'GET' && pathname === '/api/deployments/status') {
+    try {
+      const customers = await listCustomers();
+      const versionMap = {};
+      for (const c of customers) {
+        const v = c.hrms_version || 'Unknown';
+        if (!versionMap[v]) versionMap[v] = { version: v, count: 0, customers: [] };
+        versionMap[v].count++;
+        versionMap[v].customers.push({ id: c.id, name: c.legal_name, status: c.update_status || 'current' });
+      }
+      const versions = Object.values(versionMap).sort((a, b) => b.count - a.count);
+      const upToDate = customers.filter(c => c.update_status === 'current').length;
+      sendJson(res, 200, { total: customers.length, up_to_date: upToDate, needs_update: customers.length - upToDate, versions });
+    } catch (error) {
+      sendJson(res, 500, { error: error.message });
+    }
+    return;
+  }
+
+  // ── Reporting ─────────────────────────────────────────────────────────
+
+  if (req.method === 'GET' && pathname === '/api/reports/summary') {
+    try {
+      const customers = await listCustomers();
+      const now = Date.now();
+      const planCounts = {};
+      const statusCounts = {};
+      let totalLicenses = 0, activeLicenses = 0, revokedLicenses = 0, expiredLicenses = 0;
+      for (const c of customers) {
+        planCounts[c.plan] = (planCounts[c.plan] || 0) + 1;
+        statusCounts[c.status] = (statusCounts[c.status] || 0) + 1;
+        for (const l of (c.licenses || [])) {
+          totalLicenses++;
+          if (l.revoked) revokedLicenses++;
+          else if (l.expires_at && new Date(l.expires_at).getTime() < now) expiredLicenses++;
+          else activeLicenses++;
+        }
+      }
+      sendJson(res, 200, {
+        generated_at: new Date().toISOString(),
+        total_customers: customers.length,
+        by_plan: planCounts,
+        by_status: statusCounts,
+        licenses: { total: totalLicenses, active: activeLicenses, revoked: revokedLicenses, expired: expiredLicenses }
+      });
+    } catch (error) {
+      sendJson(res, 500, { error: error.message });
+    }
+    return;
+  }
+
+  if (req.method === 'GET' && pathname === '/api/reports/customer') {
+    try {
+      const url = new URL(req.url, `http://${req.headers.host}`);
+      const customerId = url.searchParams.get('id');
+      if (!customerId) return sendJson(res, 400, { error: 'customer id required.' });
+      const customer = await getCustomer(customerId);
+      if (!customer) return sendJson(res, 404, { error: 'Customer not found.' });
+      const now = Date.now();
+      const licenses = (customer.licenses || []).map(l => ({
+        ...l,
+        status: l.revoked ? 'revoked' : (l.expires_at && new Date(l.expires_at).getTime() < now ? 'expired' : 'active')
+      }));
+      const activeLicense = licenses.find(l => l.status === 'active');
+      sendJson(res, 200, {
+        customer: { id: customer.id, legal_name: customer.legal_name, plan: customer.plan, status: customer.status, contact_email: customer.contact_email, created_at: customer.created_at },
+        licenses: { total: licenses.length, active: licenses.filter(l => l.status === 'active').length, revoked: licenses.filter(l => l.status === 'revoked').length, expired: licenses.filter(l => l.status === 'expired').length },
+        current_license: activeLicense ? { plan: activeLicense.plan, expires_at: activeLicense.expires_at, hardware_id: activeLicense.hardware_id } : null,
+        generated_at: new Date().toISOString()
+      });
+    } catch (error) {
+      sendJson(res, 500, { error: error.message });
+    }
+    return;
+  }
+
+  // ── Webhooks ──────────────────────────────────────────────────────────
+
+  if (req.method === 'GET' && pathname === '/api/webhooks') {
+    try {
+      const { readFile: rf } = await import('fs/promises');
+      const whPath = join(dataDir, 'webhooks.json');
+      let webhooks = [];
+      try { webhooks = JSON.parse(await rf(whPath, 'utf8')); } catch (_) {}
+      const safe = webhooks.map(w => ({ ...w, secret: w.secret ? '••••••••' : '' }));
+      sendJson(res, 200, { webhooks: safe });
+    } catch (error) {
+      sendJson(res, 500, { error: error.message });
+    }
+    return;
+  }
+
+  if (req.method === 'POST' && pathname === '/api/webhooks') {
+    try {
+      const body = await readJsonBody(req);
+      if (!body.url) return sendJson(res, 400, { error: 'Webhook URL is required.' });
+      const { mkdir: md, readFile: rf, writeFile: wf } = await import('fs/promises');
+      const whPath = join(dataDir, 'webhooks.json');
+      let webhooks = [];
+      try { webhooks = JSON.parse(await rf(whPath, 'utf8')); } catch (_) {}
+      const webhook = {
+        id: crypto.randomUUID(),
+        url: body.url,
+        events: body.events || ['license_generated', 'license_revoked', 'customer_created'],
+        secret: body.secret || crypto.randomBytes(16).toString('hex'),
+        active: true,
+        created_at: new Date().toISOString(),
+        last_triggered: null,
+        failure_count: 0
+      };
+      webhooks.push(webhook);
+      await md(dataDir, { recursive: true });
+      await wf(whPath, JSON.stringify(webhooks, null, 2), 'utf8');
+      sendJson(res, 201, { webhook: { ...webhook, secret: '••••••••' } });
+    } catch (error) {
+      sendJson(res, 400, { error: error.message });
+    }
+    return;
+  }
+
+  const whDeleteMatch = pathname.match(/^\/api\/webhooks\/([A-Za-z0-9-]+)$/);
+  if (whDeleteMatch && req.method === 'DELETE') {
+    try {
+      const { readFile: rf, writeFile: wf } = await import('fs/promises');
+      const whPath = join(dataDir, 'webhooks.json');
+      let webhooks = [];
+      try { webhooks = JSON.parse(await rf(whPath, 'utf8')); } catch (_) {}
+      const before = webhooks.length;
+      webhooks = webhooks.filter(w => w.id !== whDeleteMatch[1]);
+      if (webhooks.length === before) return sendJson(res, 404, { error: 'Webhook not found.' });
+      await wf(whPath, JSON.stringify(webhooks, null, 2), 'utf8');
+      sendJson(res, 200, { status: 'deleted' });
+    } catch (error) {
+      sendJson(res, 400, { error: error.message });
+    }
+    return;
+  }
+
+  if (req.method === 'POST' && pathname === '/api/webhooks/test') {
+    try {
+      const body = await readJsonBody(req);
+      if (!body.url) return sendJson(res, 400, { error: 'Webhook URL required.' });
+      try {
+        const http = await import('http');
+        const https = await import('https');
+        const mod = body.url.startsWith('https') ? https : http;
+        await new Promise((resolve, reject) => {
+          const req2 = mod.default.request(body.url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, timeout: 10000 }, (res2) => { res2.resume(); resolve(); });
+          req2.on('error', reject);
+          req2.on('timeout', () => { req2.destroy(); reject(new Error('Timeout')); });
+          req2.write(JSON.stringify({ test: true, timestamp: new Date().toISOString() }));
+          req2.end();
+        });
+        sendJson(res, 200, { success: true, message: 'Webhook endpoint responded successfully.' });
+      } catch (e) {
+        sendJson(res, 200, { success: false, message: `Webhook test failed: ${e.message}` });
+      }
+    } catch (error) {
+      sendJson(res, 500, { error: error.message });
+    }
+    return;
+  }
+
+  // ── Customer Self-Service Portal ──────────────────────────────────────
+
+  if (req.method === 'GET' && pathname.startsWith('/api/customer-portal/')) {
+    try {
+      const customerId = pathname.split('/api/customer-portal/')[1];
+      const customer = await getCustomer(customerId);
+      if (!customer) return sendJson(res, 404, { error: 'Customer not found.' });
+      const now = Date.now();
+      const licenses = (customer.licenses || []).map(l => ({
+        license_id: l.license_id,
+        plan: l.plan,
+        status: l.revoked ? 'revoked' : (l.expires_at && new Date(l.expires_at).getTime() < now ? 'expired' : 'active'),
+        expires_at: l.expires_at,
+        generated_at: l.generated_at,
+        hardware_id: l.hardware_id,
+        days_remaining: l.expires_at ? Math.ceil((new Date(l.expires_at).getTime() - now) / (24 * 60 * 60 * 1000)) : null
+      }));
+      sendJson(res, 200, {
+        customer: {
+          id: customer.id,
+          legal_name: customer.legal_name,
+          plan: customer.plan,
+          status: customer.status,
+          renewal_date: customer.renewal_date,
+          hrms_version: customer.hrms_version,
+          update_status: customer.update_status
+        },
+        active_license: licenses.find(l => l.status === 'active') || null,
+        license_history: licenses,
+        total_licenses: licenses.length
+      });
+    } catch (error) {
+      sendJson(res, 500, { error: error.message });
+    }
+    return;
+  }
+
   if (req.method === 'GET') {
     await serveStatic(res, pathname);
     return;
