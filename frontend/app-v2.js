@@ -2,8 +2,8 @@ const TOKEN_KEY = 'vendor_console_token';
 const root = document.getElementById('root');
 const toastRegion = document.getElementById('toastRegion');
 
-// CACHE BUSTER - DO NOT REMOVE - VERSION: 2026-08-25-V9-LicenseStatusFix
-const VENDOR_TOOL_VERSION = 'v3.9.0-v9-LicenseStatusFix';
+// CACHE BUSTER - DO NOT REMOVE - VERSION: 2026-08-25-V10-OverviewLoadingFix
+const VENDOR_TOOL_VERSION = 'v3.10.0-v10-OverviewLoadingFix';
 console.log('[License-Gen-Hrms] Loaded:', VENDOR_TOOL_VERSION, 'Time:', new Date().toISOString());
 console.log('[CACHE BUSTER] If you see old version, press Ctrl+Shift+Delete and clear cache!');
 
@@ -5469,6 +5469,11 @@ function switchToPage(pageName) {
   renderApp();
   setTimeout(() => {
     bindCurrentView();
+    if (pageName === 'overview') {
+      if (document.getElementById('recentLicensesDash')) renderRecentLicensesDash();
+      if (document.getElementById('renewalsDash')) renderRenewalsDash();
+      if (document.getElementById('metricsGrid')) renderMetrics();
+    }
   }, 100);
 }
 
