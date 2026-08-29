@@ -2,9 +2,8 @@ const TOKEN_KEY = 'vendor_console_token';
 const root = document.getElementById('root');
 const toastRegion = document.getElementById('toastRegion');
 
-// CACHE BUSTER - DO NOT REMOVE - VERSION: 2026-08-25-V11-CompletePlatform
-const VENDOR_TOOL_VERSION = 'v4.0.0-v11-CompletePlatform';
-console.log('[License-Gen-Hrms] Loaded:', VENDOR_TOOL_VERSION, 'Time:', new Date().toISOString());
+// CACHE BUSTER - DO NOT REMOVE - VERSION: 2026-08-25-V12-BugFixes
+const VENDOR_TOOL_VERSION = 'v4.1.0-v12-BugFixes';
 console.log('[License-Gen-Hrms] Loaded:', VENDOR_TOOL_VERSION, 'Time:', new Date().toISOString());
 console.log('[CACHE BUSTER] If you see old version, press Ctrl+Shift+Delete and clear cache!');
 
@@ -1019,7 +1018,7 @@ async function loadAnalyticsPage() {
       }
     }
   } catch (err) {
-    if (chartsEl) chartsEl.innerHTML = `<div class="empty-state" style="color:var(--danger);">${escapeHtml(err.message)}</div>`;
+    if (chartsEl) chartsEl.innerHTML = `<div class="empty-state" style="color:var(--danger, #ef4444);">${escapeHtml(err.message)}</div>`;
   }
 }
 
@@ -1044,7 +1043,7 @@ function renderAuditPage() {
 
         <div style="padding: 2rem;">
           <section class="section-card">
-            <div id="auditLogContainer"></div>
+            <div id="auditLogContainer"><div class="empty-state">Loading audit log...</div></div>
           </section>
         </div>
       </main>
@@ -1105,12 +1104,12 @@ async function loadCustomTemplates() {
         </div>
         <div style="display:flex;gap:6px;flex-shrink:0;margin-left:12px;">
           <button onclick="previewCustomTemplate('${t.id}')" class="secondary-btn" style="font-size:11px;padding:4px 10px;">Preview</button>
-          <button onclick="deleteCustomTemplate('${t.id}')" class="ghost-btn" style="font-size:11px;color:var(--danger);padding:4px 10px;">Delete</button>
+          <button onclick="deleteCustomTemplate('${t.id}')" class="ghost-btn" style="font-size:11px;color:var(--danger, #ef4444);padding:4px 10px;">Delete</button>
         </div>
       </div>`;
     }).join('');
   } catch (err) {
-    el.innerHTML = `<div class="empty-state" style="color:var(--danger);">${escapeHtml(err.message)}</div>`;
+    el.innerHTML = `<div class="empty-state" style="color:var(--danger, #ef4444);">${escapeHtml(err.message)}</div>`;
   }
 }
 
@@ -1583,7 +1582,7 @@ function renderVendorConfigurationPage() {
                     <div class="section-kicker">${escapeHtml(card.eyebrow)}</div>
                   </div>
                   <h3 class="section-title" style="font-size:18px;margin:6px 0 16px;">${escapeHtml(card.title)}</h3>
-                  <div style="display:grid;gap:0;width:100%;font-size:13px;color:var(--text-secondary);">
+                  <div style="display:grid;gap:0;width:100%;font-size:13px;color:var(--text-secondary, #6b7280);">
                     ${card.rows.map(([label, value]) => `
                       <div style="display:flex;justify-content:space-between;gap:14px;border-bottom:1px solid var(--border-light);padding:10px 0;">
                         <span style="opacity:0.7;">${escapeHtml(label)}</span>
@@ -2044,7 +2043,7 @@ function renderSystemUpdatePage() {
               </div>
             </div>
             <div id="update-status" class="section-body" style="text-align:center;padding:40px;">
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--text-placeholder)" stroke-width="1.5" style="margin:0 auto 12px;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--text-placeholder, #d1d5db)" stroke-width="1.5" style="margin:0 auto 12px;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
               <div style="color:var(--text-muted);font-size:14px;">Click "Check for Updates" to get started</div>
             </div>
           </div>
@@ -2064,9 +2063,9 @@ function renderSystemUpdatePage() {
                   <div class="section-title">What's New</div>
                 </div>
               </div>
-              <div id="update-release-notes" class="section-body" style="font-size:14px;line-height:1.7;color:var(--text-secondary);"></div>
+              <div id="update-release-notes" class="section-body" style="font-size:14px;line-height:1.7;color:var(--text-secondary, #6b7280);"></div>
               <div id="update-breaking-warning" style="display:none;padding:0 22px 16px;">
-                <div style="background:var(--danger-bg);border:1px solid var(--danger);border-radius:var(--radius-sm);padding:12px 16px;font-size:13px;color:var(--danger);">
+                <div style="background:var(--danger-bg);border:1px solid var(--danger);border-radius:var(--radius-sm);padding:12px 16px;font-size:13px;color:var(--danger, #ef4444);">
                   <strong>Breaking Changes:</strong> This update may require additional configuration. Review release notes carefully before installing.
                 </div>
               </div>
@@ -2158,7 +2157,7 @@ function renderUpdateManagementPage() {
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"></path><path d="M22 2L15 22L11 13L2 9L22 2Z"></path></svg>
                   Push to Selected
                 </button>
-                <button onclick="holdSelected()" class="secondary-btn" id="holdSelectedBtn" type="button" style="color:var(--warning);border-color:var(--warning);">
+                <button onclick="holdSelected()" class="secondary-btn" id="holdSelectedBtn" type="button" style="color:var(--warning, #f59e0b);border-color:var(--warning, #f59e0b);">
                   Hold Selected
                 </button>
               </div>
@@ -2178,7 +2177,7 @@ function renderUpdateManagementPage() {
             </div>
             <div class="section-body">
               <div style="display:flex;align-items:center;justify-content:space-between;">
-                <div style="font-size:13px;color:var(--text-secondary);">
+                <div style="font-size:13px;color:var(--text-secondary, #6b7280);">
                   Push release to all customers. Customers on hold will be skipped.
                 </div>
                 <button onclick="pushToAllCustomers()" class="primary-btn" id="pushAllBtn" type="button">
@@ -2246,7 +2245,7 @@ function renderCustomerChecklist() {
       const statusColor = c.update_status === 'current' ? 'var(--success)' : c.update_status === 'hold' ? 'var(--warning)' : 'var(--text-muted)';
       return `
         <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border-light);border-radius:var(--radius-sm);margin-bottom:4px;cursor:pointer;transition:background .15s;" onmouseover="this.style.background='var(--bg)'" onmouseout="this.style.background='transparent'">
-          <input type="checkbox" ${checked} onchange="toggleCustomer('${c.id}')" style="accent-color:var(--primary);">
+          <input type="checkbox" ${checked} onchange="toggleCustomer('${c.id}')" style="accent-color:var(--primary, #6366f1);">
           <div style="flex:1;min-width:0;">
             <div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(c.legal_name)}</div>
             <div style="font-size:11px;color:var(--text-muted);">${escapeHtml(c.contact_email || '')}</div>
@@ -2281,11 +2280,11 @@ async function checkAvailableRelease() {
         </div>
         <button onclick="setPushVersion('${escapeHtml(release.version)}')" class="primary-btn" type="button">Use This Version</button>
       </div>
-      ${release.release_notes ? `<div style="margin-top:12px;padding:12px;background:var(--bg);border-radius:var(--radius-sm);font-size:13px;color:var(--text-secondary);line-height:1.6;">${escapeHtml(release.release_notes)}</div>` : ''}
-      ${release.breaking_changes ? '<div style="margin-top:8px;padding:8px 12px;background:var(--danger-bg);border:1px solid var(--danger);border-radius:var(--radius-sm);font-size:12px;color:var(--danger);font-weight:600;">Breaking Changes — review before pushing</div>' : ''}
+      ${release.release_notes ? `<div style="margin-top:12px;padding:12px;background:var(--bg);border-radius:var(--radius-sm);font-size:13px;color:var(--text-secondary, #6b7280);line-height:1.6;">${escapeHtml(release.release_notes)}</div>` : ''}
+      ${release.breaking_changes ? '<div style="margin-top:8px;padding:8px 12px;background:var(--danger-bg);border:1px solid var(--danger);border-radius:var(--radius-sm);font-size:12px;color:var(--danger, #ef4444);font-weight:600;">Breaking Changes — review before pushing</div>' : ''}
     `;
   } catch (err) {
-    container.innerHTML = `<div style="text-align:center;padding:24px;color:var(--danger);font-size:13px;">Error: ${escapeHtml(err.message)}</div>`;
+    container.innerHTML = `<div style="text-align:center;padding:24px;color:var(--danger, #ef4444);font-size:13px;">Error: ${escapeHtml(err.message)}</div>`;
   }
 }
 
@@ -2374,7 +2373,7 @@ async function refreshCustomerListForPush() {
     _updateMgmtCustomers = data.customers || data || [];
     renderCustomerChecklist();
   } catch (err) {
-    container.innerHTML = `<div style="text-align:center;padding:24px;color:var(--danger);font-size:13px;">Error loading customers: ${escapeHtml(err.message)}</div>`;
+    container.innerHTML = `<div style="text-align:center;padding:24px;color:var(--danger, #ef4444);font-size:13px;">Error loading customers: ${escapeHtml(err.message)}</div>`;
   }
 }
 
@@ -2402,16 +2401,16 @@ async function refreshDistributionHistory() {
             <div style="font-size:11px;color:var(--text-muted);">${escapeHtml(d.created_at ? new Date(d.created_at).toLocaleDateString() : '')}</div>
           </div>
           <div style="display:flex;gap:16px;margin-top:8px;font-size:12px;">
-            <span style="color:var(--success);">${pushedCount} pushed</span>
-            <span style="color:var(--warning);">${holdCount} held</span>
-            <span style="color:var(--primary);">${appliedCount} applied</span>
+            <span style="color:var(--success, #10b981);">${pushedCount} pushed</span>
+            <span style="color:var(--warning, #f59e0b);">${holdCount} held</span>
+            <span style="color:var(--primary, #6366f1);">${appliedCount} applied</span>
             <span style="color:var(--text-muted);">${d.customers.length} total</span>
           </div>
         </div>
       `;
     }).join('') + '</div>';
   } catch (err) {
-    container.innerHTML = `<div style="text-align:center;padding:24px;color:var(--danger);font-size:13px;">Error: ${escapeHtml(err.message)}</div>`;
+    container.innerHTML = `<div style="text-align:center;padding:24px;color:var(--danger, #ef4444);font-size:13px;">Error: ${escapeHtml(err.message)}</div>`;
   }
 }
 
@@ -2576,16 +2575,16 @@ async function submitReleasePublish(event) {
     
     resultDiv.style.display = 'block';
     resultDiv.innerHTML = `
-      <div class="section-card" style="border-color:var(--success);">
+      <div class="section-card" style="border-color:var(--success, #10b981);">
         <div class="section-body">
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-            <span style="font-size:16px;font-weight:700;color:var(--success);">Release Published Successfully</span>
+            <span style="font-size:16px;font-weight:700;color:var(--success, #10b981);">Release Published Successfully</span>
           </div>
-          <div style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--text-secondary);">
+          <div style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--text-secondary, #6b7280);">
             <div><strong>Version:</strong> v${escapeHtml(result.version)}</div>
             <div><strong>Commit:</strong> ${result.commit_sha ? result.commit_sha.slice(0,7) : 'N/A'}</div>
-            <div><strong>Raw URL:</strong> <a href="${escapeHtml(result.raw_url)}" target="_blank" style="color:var(--primary);text-decoration:underline;">${escapeHtml(result.raw_url)}</a></div>
+            <div><strong>Raw URL:</strong> <a href="${escapeHtml(result.raw_url)}" target="_blank" style="color:var(--primary, #6366f1);text-decoration:underline;">${escapeHtml(result.raw_url)}</a></div>
           </div>
         </div>
       </div>
@@ -2597,11 +2596,11 @@ async function submitReleasePublish(event) {
   } catch (error) {
     resultDiv.style.display = 'block';
     resultDiv.innerHTML = `
-      <div class="section-card" style="border-color:var(--danger);">
+      <div class="section-card" style="border-color:var(--danger, #ef4444);">
         <div class="section-body">
           <div style="display:flex;align-items:center;gap:10px;">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
-            <span style="font-size:14px;font-weight:600;color:var(--danger);">${escapeHtml(error.message)}</span>
+            <span style="font-size:14px;font-weight:600;color:var(--danger, #ef4444);">${escapeHtml(error.message)}</span>
           </div>
         </div>
       </div>
@@ -2636,7 +2635,7 @@ async function refreshReleaseHistory() {
       </div>
     `).join('') + '</div>';
   } catch (error) {
-    container.innerHTML = '<div style="text-align:center;padding:24px;color:var(--danger);font-size:13px;">Failed to load releases</div>';
+    container.innerHTML = '<div style="text-align:center;padding:24px;color:var(--danger, #ef4444);font-size:13px;">Failed to load releases</div>';
   }
 }
 
@@ -3739,7 +3738,7 @@ async function refreshDashboard(preferredCustomerId = state.selectedCustomerId) 
   }
   
   // Only render page-specific content if those elements exist on current page
-  if (document.getElementById('securityNote')) renderSecurityNote();
+  if (document.getElementById('securityList')) renderSecurityNote();
   if (document.getElementById('metricsGrid')) renderMetrics();
   if (document.getElementById('recentLicensesDash')) renderRecentLicensesDash();
   if (document.getElementById('renewalsDash')) renderRenewalsDash();
@@ -4051,6 +4050,7 @@ async function handleLogout() {
   }
   clearSession('Signed out of vendor console.');
 }
+window.handleLogout = handleLogout;
 
 function bindAuthEvents() {
   const setupForm = document.getElementById('setupForm');
@@ -4065,10 +4065,6 @@ function bindAuthEvents() {
 function bindWorkspaceEvents() {
   // Navigation is handled by onclick="switchToPage()" in the template
   // No need to bind navigation buttons here anymore
-
-  // Sign out button (exists on all pages)
-  const signOutBtn = document.getElementById('signOutBtn');
-  if (signOutBtn) signOutBtn.addEventListener('click', handleLogout);
 
   // Customer page specific buttons
   const newCustomerBtn = document.getElementById('newCustomerBtn');
@@ -4771,11 +4767,11 @@ VY Group Team`
 };
 
 async function createTemplate() {
-  const modal = document.getElementById('modalOverlay');
-  if (!modal) return;
-  modal.innerHTML = `
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.innerHTML = `
     <div class="modal-box" style="max-width:560px;">
-      <div class="modal-header"><h3>Create Email Template</h3></div>
+      <div class="modal-header"><h3 class="modal-title">Create Email Template</h3></div>
       <div class="modal-body">
         <div class="field"><label class="field-label">Template Name</label><input type="text" id="tplName" class="surface-input" placeholder="e.g. Onboarding Welcome"></div>
         <div class="field"><label class="field-label">Subject Line</label><input type="text" id="tplSubject" class="surface-input" placeholder="Welcome to HRMS, {{customer_name}}"></div>
@@ -4783,11 +4779,11 @@ async function createTemplate() {
         <div class="field"><label class="field-label">Category</label><select id="tplCategory" class="surface-input"><option value="custom">Custom</option><option value="welcome">Welcome</option><option value="renewal">Renewal</option><option value="trial">Trial</option><option value="alert">Alert</option></select></div>
       </div>
       <div class="modal-footer">
-        <button onclick="document.getElementById('modalOverlay').classList.add('hidden')" class="ghost-btn">Cancel</button>
-        <button onclick="submitCreateTemplate()" class="primary-btn">Create Template</button>
+        <button class="ghost-btn" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+        <button class="primary-btn" onclick="submitCreateTemplate();this.closest('.modal-overlay').remove()">Create Template</button>
       </div>
     </div>`;
-  modal.classList.remove('hidden');
+  document.body.appendChild(overlay);
 }
 
 async function submitCreateTemplate() {
@@ -4799,8 +4795,7 @@ async function submitCreateTemplate() {
   try {
     await api('/api/templates', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, subject, body, category }) });
     showToast('Template created.', 'success');
-    document.getElementById('modalOverlay')?.classList.add('hidden');
-    renderTemplatesPage();
+    loadCustomTemplates();
   } catch (err) { showToast(err.message, 'error'); }
 }
 
@@ -4858,7 +4853,7 @@ function previewTemplate(key) {
         padding:16px 20px;
         margin-bottom:16px;
       ">
-        <span style="font-size:11px; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-secondary); font-weight:600;">Subject</span>
+        <span style="font-size:11px; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-secondary, #6b7280); font-weight:600;">Subject</span>
         <div style="margin-top:4px; font-size:15px; font-weight:700; color:var(--text);">${subject}</div>
       </div>
       <div style="
@@ -5052,7 +5047,7 @@ async function renderOperators() {
             <span class="status-pill ${op.role === 'admin' ? 'active' : 'prospect'}">${escapeHtml(op.role || 'operator')}</span>
           </div>
           <div class="history-meta">${escapeHtml(op.email)}</div>
-          <div style="margin-top:8px;color:var(--muted);font-size:13px;">
+          <div style="margin-top:8px;color:var(--text-muted, #6b7280);font-size:13px;">
             Last login: ${escapeHtml(formatDateTime(op.last_login_at))}
           </div>
         </div>
@@ -5287,7 +5282,7 @@ async function renderRenewalPipeline() {
                 </div>
                 <div style="display:flex;gap:8px;align-items:center;">
                   <span class="status-pill ${urgency}">${urgencyLabel}</span>
-                  <span style="font-size:13px;font-weight:600;color:var(--muted);">${daysLeft > 0 ? daysLeft + ' days left' : 'Expired'}</span>
+                  <span style="font-size:13px;font-weight:600;color:var(--text-muted, #6b7280);">${daysLeft > 0 ? daysLeft + ' days left' : 'Expired'}</span>
                   <button onclick="quickEmailCustomer('${c.id}')" class="secondary-btn" style="min-height:32px;padding:6px 12px;font-size:12px;">Draft Email</button>
                 </div>
               </div>
@@ -5407,8 +5402,8 @@ async function renderOnboardingTracker() {
           <div class="history-card" style="border-top:3px solid ${stage.color};">
             <div style="font-weight:600;font-size:14px;margin-bottom:8px;">${escapeHtml(stage.label)}</div>
             <div style="font-size:2rem;font-weight:700;color:${stage.color};">${stage.customers.length}</div>
-            <div style="margin-top:8px;font-size:12px;color:var(--muted);">
-              ${stage.customers.slice(0, 3).map(c => `<div style="truncate;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(c.legal_name)}</div>`).join('')}
+            <div style="margin-top:8px;font-size:12px;color:var(--text-muted, #6b7280);">
+              ${stage.customers.slice(0, 3).map(c => `<div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(c.legal_name)}</div>`).join('')}
               ${stage.customers.length > 3 ? `<div>+${stage.customers.length - 3} more</div>` : ''}
             </div>
           </div>
@@ -5447,7 +5442,7 @@ function renderSecuritySettings() {
       <div class="form-grid">
         <div class="history-card">
           <h4 style="margin-bottom:12px;">Session Management</h4>
-          <p style="color:var(--muted);font-size:13px;">
+          <p style="color:var(--text-muted, #6b7280);font-size:13px;">
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:middle;margin-right:4px;color:#10b981;"><polyline points="20 6 9 17 4 12"></polyline></svg> Session timeout: 30 minutes<br>
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:middle;margin-right:4px;color:#10b981;"><polyline points="20 6 9 17 4 12"></polyline></svg> Auto-logout on inactivity<br>
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:middle;margin-right:4px;color:#10b981;"><polyline points="20 6 9 17 4 12"></polyline></svg> Secure token storage
@@ -5455,7 +5450,7 @@ function renderSecuritySettings() {
         </div>
         <div class="history-card">
           <h4 style="margin-bottom:12px;">Rate Limiting</h4>
-          <p style="color:var(--muted);font-size:13px;">
+          <p style="color:var(--text-muted, #6b7280);font-size:13px;">
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:middle;margin-right:4px;color:#10b981;"><polyline points="20 6 9 17 4 12"></polyline></svg> 100 requests per minute<br>
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:middle;margin-right:4px;color:#10b981;"><polyline points="20 6 9 17 4 12"></polyline></svg> IP-based tracking<br>
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:middle;margin-right:4px;color:#10b981;"><polyline points="20 6 9 17 4 12"></polyline></svg> Automatic cleanup
@@ -5463,7 +5458,7 @@ function renderSecuritySettings() {
         </div>
         <div class="history-card">
           <h4 style="margin-bottom:12px;">Data Protection</h4>
-          <p style="color:var(--muted);font-size:13px;">
+          <p style="color:var(--text-muted, #6b7280);font-size:13px;">
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:middle;margin-right:4px;color:#10b981;"><polyline points="20 6 9 17 4 12"></polyline></svg> AES-256-GCM encryption<br>
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:middle;margin-right:4px;color:#10b981;"><polyline points="20 6 9 17 4 12"></polyline></svg> Secure password hashing<br>
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:middle;margin-right:4px;color:#10b981;"><polyline points="20 6 9 17 4 12"></polyline></svg> GDPR compliance ready
@@ -5471,7 +5466,7 @@ function renderSecuritySettings() {
         </div>
         <div class="history-card">
           <h4 style="margin-bottom:12px;">Audit Trail</h4>
-          <p style="color:var(--muted);font-size:13px;">
+          <p style="color:var(--text-muted, #6b7280);font-size:13px;">
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:middle;margin-right:4px;color:#10b981;"><polyline points="20 6 9 17 4 12"></polyline></svg> All actions logged<br>
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:middle;margin-right:4px;color:#10b981;"><polyline points="20 6 9 17 4 12"></polyline></svg> Operator tracking<br>
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:middle;margin-right:4px;color:#10b981;"><polyline points="20 6 9 17 4 12"></polyline></svg> Timestamp records
@@ -6320,7 +6315,7 @@ function show2faChallenge(operatorId) {
           <input id="twoFaCode" class="surface-input" type="text" inputmode="numeric" pattern="[0-9a-fA-F]{6,8}" maxlength="8" placeholder="000000" required autofocus
             style="text-align:center;font-size:28px;letter-spacing:8px;padding:16px;font-weight:700;font-family:monospace;width:100%;box-sizing:border-box;margin-bottom:16px;">
           <button type="submit" class="primary-btn" style="width:100%;padding:14px;font-size:15px;font-weight:700;">Verify Code</button>
-          <button type="button" onclick="document.getElementById('twoFaModal').remove()" class="ghost-btn" style="width:100%;margin-top:8px;padding:10px;">Cancel � Return to Login</button>
+          <button type="button" onclick="document.getElementById('twoFaModal').remove()" class="ghost-btn" style="width:100%;margin-top:8px;padding:10px;">Cancel → Return to Login</button>
         </form>
       </div>
     </div>
@@ -6337,7 +6332,6 @@ window.submit2faCode = async function(event, operatorId) {
   submitBtn.textContent = 'Verifying...';
 
   try {
-    const { authenticator } = await import('otplib').catch(() => null) || {};
     // Call backend TOTP verify endpoint
     const result = await fetch(`${window.location.origin}/api/auth/2fa/verify`, {
       method: 'POST',
@@ -6475,7 +6469,7 @@ window.showTotpSetup = async function() {
             <input id="totpConfirmCode" class="surface-input" type="text" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" placeholder="000000" required style="font-size:20px;letter-spacing:6px;text-align:center;font-family:monospace;font-weight:700;">
           </label>
           <div id="totpBackupCodesSection" style="display:none;">
-            <p style="font-size:13px;color:#dc2626;font-weight:600;margin:8px 0 4px;">? Save these backup codes � they will not be shown again:</p>
+            <p style="font-size:13px;color:#dc2626;font-weight:600;margin:8px 0 4px;">⚠ Save these backup codes — they will not be shown again:</p>
             <div id="totpBackupCodes" style="background:#fef2f2;padding:12px;border-radius:8px;font-family:monospace;font-size:13px;line-height:2;"></div>
             <button type="button" onclick="downloadBackupCodes()" class="secondary-btn" style="width:100%;margin-top:8px;">Download Backup Codes</button>
           </div>
@@ -6721,14 +6715,14 @@ async function loadActivityFeed() {
             <span style="font-size:11px;color:var(--text-muted);flex-shrink:0;">${escapeHtml(e.timestamp ? new Date(e.timestamp).toLocaleString() : '')}</span>
           </div>
           <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">
-            <span style="color:var(--primary);font-weight:500;">${escapeHtml(e.operator)}</span>
+            <span style="color:var(--primary, #6366f1);font-weight:500;">${escapeHtml(e.operator)}</span>
             ${detail ? ' — ' + escapeHtml(detail) : ''}
           </div>
         </div>
       </div>`;
     }).join('');
   } catch (err) {
-    el.innerHTML = `<div class="empty-state" style="color:var(--danger);">Failed to load activity feed: ${escapeHtml(err.message)}</div>`;
+    el.innerHTML = `<div class="empty-state" style="color:var(--danger, #ef4444);">Failed to load activity feed: ${escapeHtml(err.message)}</div>`;
   }
 }
 
@@ -6802,7 +6796,7 @@ async function loadHealthScores() {
         </div>`;
       }).join('')}`;
   } catch (err) {
-    el.innerHTML = `<div class="empty-state" style="color:var(--danger);">Failed to load health scores: ${escapeHtml(err.message)}</div>`;
+    el.innerHTML = `<div class="empty-state" style="color:var(--danger, #ef4444);">Failed to load health scores: ${escapeHtml(err.message)}</div>`;
   }
 }
 
@@ -6848,7 +6842,7 @@ async function loadDeploymentStatus() {
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px;">
         <div class="section-card" style="padding:20px;border-left:4px solid var(--primary, #6366f1);">
           <div style="font-size:11px;text-transform:uppercase;color:var(--text-muted);font-weight:600;">Total Customers</div>
-          <div style="font-size:28px;font-weight:700;color:var(--primary);">${data.total || 0}</div>
+          <div style="font-size:28px;font-weight:700;color:var(--primary, #6366f1);">${data.total || 0}</div>
         </div>
         <div class="section-card" style="padding:20px;border-left:4px solid #10b981;">
           <div style="font-size:11px;text-transform:uppercase;color:var(--text-muted);font-weight:600;">Up to Date</div>
@@ -6878,7 +6872,7 @@ async function loadDeploymentStatus() {
         }).join('')}
       </div>`;
   } catch (err) {
-    el.innerHTML = `<div class="empty-state" style="color:var(--danger);">Failed to load deployment status: ${escapeHtml(err.message)}</div>`;
+    el.innerHTML = `<div class="empty-state" style="color:var(--danger, #ef4444);">Failed to load deployment status: ${escapeHtml(err.message)}</div>`;
   }
 }
 
@@ -6922,7 +6916,7 @@ function renderCampaignsPage() {
               <label class="field-label">Recipients</label>
               <div id="campaignRecipients" style="max-height:200px;overflow-y:auto;border:1px solid var(--border-light, rgba(0,0,0,.1));border-radius:6px;padding:8px;">
                 <label style="display:flex;align-items:center;gap:8px;padding:4px 0;cursor:pointer;font-size:12px;">
-                  <input type="checkbox" id="campaignSelectAll" onchange="toggleCampaignSelectAll()" style="accent-color:var(--primary);"> Select All Customers
+                  <input type="checkbox" id="campaignSelectAll" onchange="toggleCampaignSelectAll()" style="accent-color:var(--primary, #6366f1);"> Select All Customers
                 </label>
               </div>
             </div>
@@ -6947,7 +6941,7 @@ async function loadCampaigns() {
     const customers = state.customers || [];
     const existing = recipientsEl.querySelectorAll('label[data-cid]').length;
     if (existing === 0 && customers.length) {
-      const checkHtml = customers.map(c => `<label data-cid="${c.id}" style="display:flex;align-items:center;gap:8px;padding:4px 0;cursor:pointer;font-size:12px;"><input type="checkbox" value="${c.id}" class="campaign-cb" style="accent-color:var(--primary);"> ${escapeHtml(c.legal_name)} <span style="color:var(--text-muted);font-size:10px;">${escapeHtml(c.contact_email || '')}</span></label>`).join('');
+      const checkHtml = customers.map(c => `<label data-cid="${c.id}" style="display:flex;align-items:center;gap:8px;padding:4px 0;cursor:pointer;font-size:12px;"><input type="checkbox" value="${c.id}" class="campaign-cb" style="accent-color:var(--primary, #6366f1);"> ${escapeHtml(c.legal_name)} <span style="color:var(--text-muted);font-size:10px;">${escapeHtml(c.contact_email || '')}</span></label>`).join('');
       recipientsEl.insertAdjacentHTML('beforeend', checkHtml);
     }
   } catch (_) {}
@@ -6966,7 +6960,7 @@ async function loadCampaigns() {
       <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">Sent: ${c.sent || 0} | Failed: ${c.failed || 0} | Total: ${c.total || 0}</div>
     </div>`).join('');
   } catch (err) {
-    historyEl.innerHTML = `<div class="empty-state" style="color:var(--danger);">${escapeHtml(err.message)}</div>`;
+    historyEl.innerHTML = `<div class="empty-state" style="color:var(--danger, #ef4444);">${escapeHtml(err.message)}</div>`;
   }
 }
 
@@ -7034,7 +7028,7 @@ async function loadReportSummary() {
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;">
         <div class="section-card" style="padding:20px;border-left:4px solid var(--primary, #6366f1);">
           <div style="font-size:11px;text-transform:uppercase;color:var(--text-muted);font-weight:600;">Total Customers</div>
-          <div style="font-size:28px;font-weight:700;color:var(--primary);">${data.total_customers || 0}</div>
+          <div style="font-size:28px;font-weight:700;color:var(--primary, #6366f1);">${data.total_customers || 0}</div>
         </div>
         <div class="section-card" style="padding:20px;border-left:4px solid #10b981;">
           <div style="font-size:11px;text-transform:uppercase;color:var(--text-muted);font-weight:600;">Active Licenses</div>
@@ -7063,7 +7057,7 @@ async function loadReportSummary() {
         <button onclick="downloadReport()" class="secondary-btn" type="button">Download Full Report (JSON)</button>
       </div>`;
   } catch (err) {
-    el.innerHTML = `<div class="empty-state" style="color:var(--danger);">Failed to load reports: ${escapeHtml(err.message)}</div>`;
+    el.innerHTML = `<div class="empty-state" style="color:var(--danger, #ef4444);">Failed to load reports: ${escapeHtml(err.message)}</div>`;
   }
 }
 
@@ -7145,13 +7139,13 @@ async function loadWebhooks() {
     el.innerHTML = webhooks.map(w => `<div style="padding:12px;border:1px solid var(--border-light, rgba(0,0,0,.08));border-radius:8px;margin-bottom:8px;">
       <div style="display:flex;justify-content:space-between;align-items:center;">
         <span style="font-size:13px;font-weight:600;word-break:break-all;">${escapeHtml(w.url)}</span>
-        <button onclick="deleteWebhook('${w.id}')" class="ghost-btn" style="font-size:11px;color:var(--danger);flex-shrink:0;">Delete</button>
+        <button onclick="deleteWebhook('${w.id}')" class="ghost-btn" style="font-size:11px;color:var(--danger, #ef4444);flex-shrink:0;">Delete</button>
       </div>
       <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Events: ${escapeHtml((w.events || []).join(', '))}</div>
       <div style="font-size:11px;color:var(--text-muted);">Created: ${escapeHtml(w.created_at ? new Date(w.created_at).toLocaleDateString() : '')}</div>
     </div>`).join('');
   } catch (err) {
-    el.innerHTML = `<div class="empty-state" style="color:var(--danger);">${escapeHtml(err.message)}</div>`;
+    el.innerHTML = `<div class="empty-state" style="color:var(--danger, #ef4444);">${escapeHtml(err.message)}</div>`;
   }
 }
 
@@ -7275,7 +7269,7 @@ async function loadCustomerPortal(customerId) {
         </div>`).join('') : '<div style="color:var(--text-muted);font-size:12px;">No license history.</div>'}
       </div>`;
   } catch (err) {
-    el.innerHTML = `<div class="empty-state" style="color:var(--danger);">Failed to load portal data: ${escapeHtml(err.message)}</div>`;
+    el.innerHTML = `<div class="empty-state" style="color:var(--danger, #ef4444);">Failed to load portal data: ${escapeHtml(err.message)}</div>`;
   }
 }
 
