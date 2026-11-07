@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "start": "node backend/server.mjs",
-    "verify": "node --check backend/license-service.mjs && node --check backend/customer-store.mjs && node --check backend/auth-service.mjs && node --check backend/server.mjs && node --check frontend/app.js"
+    "verify": "node --check backend/license-service.mjs && node --check backend/customer-store.mjs && node --check backend/auth-service.mjs && node --check backend/server.mjs && node --check frontend/app-v2.js"
   },
   "dependencies": {
     "nodemailer": "^8.0.7",
