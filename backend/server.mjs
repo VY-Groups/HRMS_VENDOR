@@ -15,6 +15,7 @@ import { listVendors, getVendor, createVendor, updateVendor, deleteVendor, suspe
 import { initSecureConfig } from './secure-config.mjs';
 import { getMailConfig, saveMailConfig, testMailConnection, sendMail, sendPasswordResetEmail } from './mail-service.mjs';
 import { setup2FA, confirm2FA, disable2FA, verify2FAForLogin, regenerateBackupCodes } from './totp-service.mjs';
+import { initialSetupError, isPublicApiRoute, operatorRegistrationError } from './auth-routes.mjs';
 
 // ── Rate Limiting for Login ───────────────────────────────────────────────
 // Protects against brute-force password attacks
@@ -160,23 +161,6 @@ async function serveStatic(res, pathname) {
   }
 }
 
-function isPublicApiRoute(method, pathname) {
-  return (
-    (method === 'GET' && pathname === '/api/plans') ||
-    (method === 'GET' && pathname === '/api/security-note') ||
-    (method === 'GET' && pathname === '/api/auth/status') ||
-    (method === 'POST' && pathname === '/api/auth/setup') ||
-    (method === 'POST' && pathname === '/api/auth/register') ||
-    (method === 'POST' && pathname === '/api/auth/login') ||
-    (method === 'POST' && pathname === '/api/auth/logout') ||
-    (method === 'POST' && pathname === '/api/auth/forgot-password') ||
-    (method === 'POST' && pathname === '/api/auth/reset-password') ||
-    (method === 'POST' && pathname === '/api/auth/2fa/verify') ||
-    (method === 'POST' && pathname === '/api/auth/send-otp') ||
-    (method === 'POST' && pathname === '/api/auth/verify-otp')
-  );
-}
-
 // ── OTP Store (in-memory for setup flow) ────────────────────────────────────
 const otpStore = new Map(); // email -> { code, expiresAt, smtpConfig }
 
@@ -297,7 +281,13 @@ const server = createServer(async (req, res) => {
 
     if (req.method === 'POST' && pathname === '/api/auth/setup') {
       try {
-        const result = await createInitialOperator(await readJsonBody(req));
+        const body = await readJsonBody(req);
+        const setupError = initialSetupError(setupRequired, process.env.VENDOR_SETUP_TOKEN, body.setup_token);
+        if (setupError) {
+          sendJson(res, setupError.status, { error: setupError.error });
+          return;
+        }
+        const result = await createInitialOperator(body);
         sendJson(res, 200, {
           status: 'ready',
           ...result
@@ -370,6 +360,11 @@ const server = createServer(async (req, res) => {
     }
 
     if (req.method === 'POST' && pathname === '/api/auth/register') {
+      const registrationError = operatorRegistrationError(setupRequired, session);
+      if (registrationError) {
+        sendJson(res, registrationError.status, { error: registrationError.error });
+        return;
+      }
       try {
         const result = await registerNewOperator(await readJsonBody(req));
         sendJson(res, 200, {
@@ -766,7 +761,7 @@ const server = createServer(async (req, res) => {
                 if (decoded?.vendor_id) licVendorId = decoded.vendor_id;
               } catch (_) {}
             }
-            await addToCRL({
+            const crl = await addToCRL({
               vendor_id: licVendorId,
               license_id: lic.license_id,
               customer:   customer.legal_name,
@@ -774,7 +769,7 @@ const server = createServer(async (req, res) => {
               reason:     reason || `Customer deleted by ${session?.operator?.email || 'vendor'}`,
               revoked_by: session?.operator?.email || 'vendor-operator'
             });
-            crlResults.push({ license_id: lic.license_id, status: 'revoked' });
+            crlResults.push({ license_id: lic.license_id, status: 'revoked', published: crl.publication.success, publish_error: crl.publication.error });
           } catch (e) {
             crlResults.push({ license_id: lic.license_id, status: 'error', error: e.message });
           }
@@ -792,13 +787,19 @@ const server = createServer(async (req, res) => {
 
       triggerBackup(session?.operator?.vendor_id || customer.vendor_id, 'customer_deleted');
 
+      const revokedCount = crlResults.filter(result => result.status === 'revoked').length;
+      const publishPending = crlResults.filter(result => result.status !== 'revoked' || !result.published).length;
+
       sendJson(res, 200, {
         status:           'deleted',
         customer_name:    customer.legal_name,
-        licenses_revoked: crlResults.length,
+        licenses_revoked: revokedCount,
+        crl_publish_pending: publishPending,
         crl_results:      crlResults,
-        message: activeLicenseIds.length > 0
-          ? `Customer deleted. ${crlResults.length} license(s) revoked and CRL published to GitHub. HRMS will block access within 6 hours.`
+        message: publishPending > 0
+          ? `Customer deleted. ${revokedCount} license(s) revoked locally; ${publishPending} revocation update(s) failed or remain unpublished. HRMS may still allow access until GitHub publishes them.`
+          : activeLicenseIds.length > 0
+          ? `Customer deleted. ${revokedCount} license(s) revoked and CRL published to GitHub. HRMS will block access within 6 hours.`
           : 'Customer deleted. No active licenses to revoke.'
       });
     } catch (error) {
@@ -1038,7 +1039,7 @@ const server = createServer(async (req, res) => {
               if (decoded?.vendor_id) vendor_id = decoded.vendor_id;
             } catch (_) { /* use operator's vendor_id as fallback */ }
           }
-          await addToCRL({
+          const crl = await addToCRL({
             vendor_id:  vendor_id,
             license_id: revokedLicense.license_id,
             customer:   customer.legal_name,
@@ -1047,7 +1048,8 @@ const server = createServer(async (req, res) => {
             revoked_by: session?.operator?.email || session?.operator?.full_name || 'vendor-operator'
           });
           crlAdded = true;
-          crlPublished = true;  // addToCRL now auto-publishes
+          crlPublished = crl.publication.success;
+          crlError = crl.publication.error || null;
         } catch (crlErr) {
           crlError = crlErr.message;
           console.error('[CRL] Failed to add to CRL or publish:', crlErr.message);
@@ -1141,8 +1143,9 @@ const server = createServer(async (req, res) => {
         try {
           const { removeFromCRL } = await import('./crl-service.mjs');
           const vendor_id = session?.operator?.vendor_id || 'default';
-          await removeFromCRL(vendor_id, extendedLicense.license_id);
-          crlRemoved = true;
+          const crl = await removeFromCRL(vendor_id, extendedLicense.license_id);
+          crlRemoved = crl.removed && crl.publication.success;
+          crlError = crl.publication.error || null;
         } catch (crlErr) {
           crlError = crlErr.message;
           console.error('[CRL] Failed to remove from CRL:', crlErr.message);
@@ -1237,7 +1240,12 @@ const server = createServer(async (req, res) => {
       sendJson(res, 200, {
         success: true,
         crl,
-        warning: 'License removed from local CRL. You MUST click "Publish CRL to GitHub" for HRMS instances to unblock this license. Until published, HRMS will still block access based on the previously fetched CRL.'
+        published: crl.publication.success && !crl.publication.skipped,
+        warning: crl.publication.skipped
+          ? 'License was not present in the local CRL; no change was published.'
+          : crl.publication.success
+          ? 'License removal was published to GitHub. HRMS instances will update after their next CRL refresh.'
+          : `License was removed locally but not published. HRMS will still block access until publication succeeds. ${crl.publication.error || ''}`
       });
     } catch (error) {
       sendJson(res, 400, { error: error.message });
@@ -2147,17 +2155,19 @@ const server = createServer(async (req, res) => {
       const { deleted, customer, activeLicenseIds } = await deleteCustomer(customerId);
       const { addToCRL } = await import('./crl-service.mjs');
       const { decodeLicenseKey } = await import('./license-service.mjs');
+      let crlPublishPending = 0;
       if (activeLicenseIds.length > 0) {
         for (const lic of activeLicenseIds) {
           try {
             let vid = session?.operator?.vendor_id || 'default';
             if (lic.license_key) { try { const d = decodeLicenseKey(lic.license_key); if (d?.vendor_id) vid = d.vendor_id; } catch (_) {} }
-            await addToCRL({ vendor_id: vid, license_id: lic.license_id, customer: customer.legal_name, plan: lic.plan, reason: 'GDPR right to erasure', revoked_by: 'gdpr-automation' });
-          } catch (_) {}
+            const crl = await addToCRL({ vendor_id: vid, license_id: lic.license_id, customer: customer.legal_name, plan: lic.plan, reason: 'GDPR right to erasure', revoked_by: 'gdpr-automation' });
+            if (!crl.publication.success) crlPublishPending++;
+          } catch (_) { crlPublishPending++; }
         }
       }
       await logAuditEvent('gdpr_data_deletion', { operator_email: session?.operator?.email, customer_id: customerId, customer_name: customer.legal_name, licenses_revoked: activeLicenseIds.length });
-      sendJson(res, 200, { status: 'deleted', customer_name: customer.legal_name, licenses_revoked: activeLicenseIds.length, message: 'Customer data deleted per GDPR right to erasure.' });
+      sendJson(res, 200, { status: 'deleted', customer_name: customer.legal_name, licenses_revoked: activeLicenseIds.length, crl_publish_pending: crlPublishPending, message: crlPublishPending ? `Customer data deleted. ${crlPublishPending} revocation list update(s) failed or remain unpublished.` : 'Customer data deleted and revocation lists published.' });
     } catch (error) {
       sendJson(res, 400, { error: error.message });
     }
@@ -2261,21 +2271,27 @@ const server = createServer(async (req, res) => {
         try {
           const customer = await revokeLicense(item.customer_id, item.issuance_id, item.reason || 'Bulk revoke');
           const revoked = customer.licenses?.find(l => l.issuance_id === item.issuance_id);
+          let crlPublished = !revoked?.license_id;
+          let crlError;
           if (revoked?.license_id) {
             try {
               const { addToCRL } = await import('./crl-service.mjs');
               const { decodeLicenseKey } = await import('./license-service.mjs');
               let vid = session?.operator?.vendor_id || 'default';
               if (revoked.license_key) { try { const d = decodeLicenseKey(revoked.license_key); if (d?.vendor_id) vid = d.vendor_id; } catch (_) {} }
-              await addToCRL({ vendor_id: vid, license_id: revoked.license_id, customer: customer.legal_name, plan: revoked.plan, reason: item.reason || 'Bulk revoke', revoked_by: session?.operator?.email || 'vendor' });
-            } catch (_) {}
+              const crl = await addToCRL({ vendor_id: vid, license_id: revoked.license_id, customer: customer.legal_name, plan: revoked.plan, reason: item.reason || 'Bulk revoke', revoked_by: session?.operator?.email || 'vendor' });
+              crlPublished = crl.publication.success;
+              crlError = crl.publication.error;
+            } catch (error) {
+              crlError = error.message;
+            }
           }
-          results.push({ customer_id: item.customer_id, status: 'revoked' });
+          results.push({ customer_id: item.customer_id, status: 'revoked', crl_published: crlPublished, crl_error: crlError });
         } catch (e) {
           results.push({ customer_id: item.customer_id, status: 'error', error: e.message });
         }
       }
-      sendJson(res, 200, { revoked: results.filter(r => r.status === 'revoked').length, results });
+      sendJson(res, 200, { revoked: results.filter(r => r.status === 'revoked').length, crl_publish_pending: results.filter(r => r.status === 'revoked' && r.crl_published === false).length, results });
     } catch (error) {
       sendJson(res, 400, { error: error.message });
     }

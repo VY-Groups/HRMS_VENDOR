@@ -5,10 +5,11 @@
   "type": "module",
   "scripts": {
     "start": "node backend/server.mjs",
-    "verify": "node --check backend/license-service.mjs && node --check backend/customer-store.mjs && node --check backend/auth-service.mjs && node --check backend/server.mjs && node --check frontend/app-v2.js"
+    "test:license": "node --test backend/license-service.test.mjs backend/auth-routes.test.mjs",
+    "verify": "node --check backend/auth-routes.mjs && node --check backend/license-service.mjs && node --check backend/crl-service.mjs && node --check backend/customer-store.mjs && node --check backend/auth-service.mjs && node --check backend/server.mjs && node --check frontend/app-v2.js && npm run test:license"
   },
   "dependencies": {
-    "nodemailer": "^8.0.7",
+    "nodemailer": "^10.3.1",
     "ws": "^8.20.0"
   }
 }

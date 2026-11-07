@@ -14,7 +14,7 @@ import { readFile, writeFile, mkdir } from 'fs/promises';
 import { existsSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
-import { getMasterKey, getGithubToken } from './secure-config.mjs';
+import { getGithubToken } from './secure-config.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const CRL_DIR = join(__dirname, 'data', 'crl');
@@ -27,11 +27,6 @@ function getGithubConfig() {
     repo: process.env.CRL_GITHUB_REPO || 'HRMS-Release-Management',
     branch: process.env.CRL_GITHUB_BRANCH || 'main'
   };
-}
-
-// Signing key — from secure-config (bootstrap-encrypted master key)
-function getCrlSignKey() {
-  return getMasterKey() || '';
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -52,8 +47,14 @@ function stableStringify(value) {
   return JSON.stringify(value);
 }
 
-function signCRL(entries) {
-  return crypto.createHmac('sha256', getCrlSignKey()).update(stableStringify(entries)).digest('hex');
+export function signCRL(entries) {
+  const encodedKey = process.env.VENDOR_LICENSE_SIGNING_PRIVATE_KEY_B64;
+  if (!encodedKey) throw new Error('VENDOR_LICENSE_SIGNING_PRIVATE_KEY_B64 is required to sign the revocation list.');
+  const privateKey = Buffer.from(encodedKey, 'base64').toString('utf8');
+  const publishedEntries = entries.map(({ license_id, customer, plan, reason, revoked_at }) => ({
+    license_id, customer, plan, reason, revoked_at
+  }));
+  return crypto.sign(null, Buffer.from(stableStringify(publishedEntries)), privateKey).toString('base64url');
 }
 
 async function ensureDataDir() {
@@ -107,39 +108,31 @@ export async function saveCRL(crl) {
 export async function addToCRL({ vendor_id, license_id, customer, plan, reason, revoked_by }) {
   const crl = await loadCRL(vendor_id);
 
-  // Avoid duplicates
-  if (crl.entries.some(e => e.license_id === license_id)) return crl;
-
-  crl.entries.push({
-    license_id,
-    customer:    customer   || 'Unknown',
-    plan:        plan       || 'unknown',
-    reason:      reason     || 'Revoked by vendor',
-    revoked_by:  revoked_by || 'vendor',
-    revoked_at:  new Date().toISOString()
-  });
-
-  crl.updated_at = new Date().toISOString();
-  crl.version    = (crl.version || 1) + 1;
-  crl.signature  = signCRL(crl.entries);
-
-  await saveCRL(crl);
-  
-  // Auto-publish to GitHub
-  try {
-    await publishCRLToGitHub(vendor_id);
-  } catch (err) {
-    console.error(`[CRL] Auto-publish failed for vendor ${vendor_id}:`, err.message);
-    // Don't throw - CRL is saved locally, publish can be retried
+  const isNewEntry = !crl.entries.some(e => e.license_id === license_id);
+  if (isNewEntry) {
+    crl.entries.push({
+      license_id,
+      customer:    customer   || 'Unknown',
+      plan:        plan       || 'unknown',
+      reason:      reason     || 'Revoked by vendor',
+      revoked_by:  revoked_by || 'vendor',
+      revoked_at:  new Date().toISOString()
+    });
+    crl.updated_at = new Date().toISOString();
+    crl.version = (crl.version || 1) + 1;
   }
-  
-  return crl;
+
+  crl.signature  = signCRL(crl.entries);
+  await saveCRL(crl);
+  const publication = await publishCRLWithStatus(vendor_id);
+  return { ...crl, publication };
 }
 
 export async function removeFromCRL(vendor_id, license_id) {
   const crl = await loadCRL(vendor_id);
   const hadEntry = crl.entries.some(e => e.license_id === license_id);
-  
+  if (!hadEntry) return { ...crl, removed: false, publication: { success: true, skipped: true } };
+
   crl.entries   = crl.entries.filter(e => e.license_id !== license_id);
   crl.updated_at = new Date().toISOString();
   crl.version    = (crl.version || 1) + 1;
@@ -147,16 +140,17 @@ export async function removeFromCRL(vendor_id, license_id) {
   
   await saveCRL(crl);
   
-  // Auto-publish to GitHub if entry was removed
-  if (hadEntry) {
-    try {
-      await publishCRLToGitHub(vendor_id);
-    } catch (err) {
-      console.error(`[CRL] Auto-publish failed for vendor ${vendor_id}:`, err.message);
-    }
+  const publication = await publishCRLWithStatus(vendor_id);
+  return { ...crl, removed: true, publication };
+}
+
+async function publishCRLWithStatus(vendor_id) {
+  try {
+    return { success: true, ...await publishCRLToGitHub(vendor_id) };
+  } catch (err) {
+    console.error(`[CRL] Auto-publish failed for vendor ${vendor_id}:`, err.message);
+    return { success: false, error: err.message };
   }
-  
-  return crl;
 }
 
 // ── GitHub push (per vendor) ───────────────────────────────────────────────

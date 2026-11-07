@@ -1,10 +1,17 @@
 import crypto from 'crypto';
-import { getMasterKey } from './secure-config.mjs';
 
-const LICENSE_PREFIX = 'HRMS2-';
-const LICENSE_AAD = 'HRMS-LICENSE-V2';
+const LICENSE_PREFIX = 'HRMS3-';
+const LICENSE_AAD = 'HRMS-LICENSE-V3';
 const LICENSE_CIPHER = 'aes-256-gcm';
 const LICENSE_IV_BYTES = 12;
+
+function keyFromEnv(name) {
+  const encoded = process.env[name];
+  if (!encoded) return '';
+  const pem = Buffer.from(encoded, 'base64').toString('utf8');
+  if (Buffer.from(pem, 'utf8').toString('base64') !== encoded) throw new Error(`${name} must contain a base64-encoded PEM key.`);
+  return pem;
+}
 
 const CORE_HR_FEATURES = [
   'dashboard',
@@ -111,13 +118,6 @@ export const PLAN_CATALOG = {
   }
 };
 
-const VENDOR_MASTER_KEY = String(
-  process.env.VENDOR_LICENSE_MASTER_KEY
-  || process.env.HRMS_LICENSE_MASTER_KEY
-  || process.env.LICENSE_MASTER_KEY
-  || ''
-);
-
 function stableJson(value) {
   if (Array.isArray(value)) {
     return `[${value.map(stableJson).join(',')}]`;
@@ -128,24 +128,24 @@ function stableJson(value) {
   return JSON.stringify(value);
 }
 
-function deriveCryptoKey(masterKey = null) {
-  const key = masterKey || getMasterKey() || VENDOR_MASTER_KEY;
-  if (!key) {
-    throw new Error('No master key available for license encryption/decryption');
-  }
-  return crypto.createHash('sha256').update(String(key)).digest();
-}
-
 function normalizeFeatureList(features = [], fallback = []) {
   const merged = [...new Set([...(Array.isArray(fallback) ? fallback : []), ...(Array.isArray(features) ? features : [])].map(item => String(item || '').trim()).filter(Boolean))];
   return ALL_LICENSED_FEATURES.filter(feature => merged.includes(feature)).concat(merged.filter(feature => !ALL_LICENSED_FEATURES.includes(feature)));
 }
 
 function resolvePlanDefinition(plan, tier) {
-  const direct = PLAN_CATALOG[String(plan || '').trim().toLowerCase()];
-  if (direct) return direct;
-  const byTier = PLAN_CATALOG[String(tier || '').trim().toLowerCase()];
-  if (byTier) return byTier;
+  const normalizedPlan = String(plan || '').trim().toLowerCase();
+  const normalizedTier = String(tier || '').trim().toLowerCase();
+  if (normalizedPlan) {
+    const direct = PLAN_CATALOG[normalizedPlan];
+    if (!direct) throw new Error(`Unknown license plan: ${normalizedPlan}`);
+    return direct;
+  }
+  if (normalizedTier) {
+    const byTier = PLAN_CATALOG[normalizedTier];
+    if (!byTier) throw new Error(`Unknown license tier: ${normalizedTier}`);
+    return byTier;
+  }
   return PLAN_CATALOG.enterprise;
 }
 
@@ -162,17 +162,15 @@ export function getPublicPlanCatalog() {
 }
 
 export function getVendorSecurityNote() {
-  const masterKey = getMasterKey();
+  const configured = Boolean(keyFromEnv('VENDOR_LICENSE_SIGNING_PRIVATE_KEY_B64') && keyFromEnv('VENDOR_LICENSE_SIGNING_PUBLIC_KEY_B64') && keyFromEnv('VENDOR_LICENSE_ENCRYPTION_PUBLIC_KEY_B64') && keyFromEnv('VENDOR_LICENSE_ENCRYPTION_PRIVATE_KEY_B64'));
   return {
     isolated_runtime: true,
     network_dependency_on_hrms: false,
     storage_dependency_on_hrms: false,
-    token_format: 'HRMS2 opaque encrypted token',
-    validation_target: 'Only the HRMS backend with the matching master key can decrypt and validate the license.',
-    master_key_requirement: 'Configure the same strong master key separately in the vendor tool and in the HRMS backend. They do not call each other.',
-    production_note: masterKey
-      ? 'A custom vendor master key is configured via bootstrap encryption.'
-      : 'CRITICAL: No master key available. License operations will fail.'
+    token_format: 'HRMS3 signed opaque token',
+    validation_target: 'HRMS verifies the vendor signature and decrypts the payload with its private key.',
+    key_requirement: 'Vendor signing and encryption key pairs must be configured; HRMS receives only the signing public and encryption private keys.',
+    production_note: configured ? 'License signing and encryption keys are configured.' : 'CRITICAL: License signing or encryption key is missing.'
   };
 }
 
@@ -190,7 +188,7 @@ export function createOpaqueLicense(payload = {}) {
     : Math.floor(new Date(now.getTime() + (durationDays * 24 * 60 * 60 * 1000)).getTime() / 1000);
 
   const normalizedPayload = {
-    schema:         'hrms-license-v2',
+    schema:         'hrms-license-v3',
     license_id:     payload.license_id || crypto.randomUUID(),
     // ── Vendor identity (baked in at issuance, immutable after activation) ──
     vendor_id:      payload.vendor_id   || 'default',
@@ -231,12 +229,20 @@ export function createOpaqueLicense(payload = {}) {
     throw new Error('Hardware ID is required unless the license is marked as unbound.');
   }
 
+  const signingPrivateKey = keyFromEnv('VENDOR_LICENSE_SIGNING_PRIVATE_KEY_B64');
+  const encryptionPublicKey = keyFromEnv('VENDOR_LICENSE_ENCRYPTION_PUBLIC_KEY_B64');
+  if (!signingPrivateKey || !encryptionPublicKey) throw new Error('Vendor license signing private key and HRMS encryption public key are required.');
+
   const iv = crypto.randomBytes(LICENSE_IV_BYTES);
-  const cipher = crypto.createCipheriv(LICENSE_CIPHER, deriveCryptoKey(), iv);
+  const sessionKey = crypto.randomBytes(32);
+  const cipher = crypto.createCipheriv(LICENSE_CIPHER, sessionKey, iv);
   cipher.setAAD(Buffer.from(LICENSE_AAD, 'utf8'));
   const ciphertext = Buffer.concat([cipher.update(stableJson(normalizedPayload), 'utf8'), cipher.final()]);
   const authTag = cipher.getAuthTag();
-  const licenseKey = `${LICENSE_PREFIX}${iv.toString('base64url')}.${ciphertext.toString('base64url')}.${authTag.toString('base64url')}`;
+  const wrappedKey = crypto.publicEncrypt({ key: encryptionPublicKey, oaepHash: 'sha256' }, sessionKey);
+  const signedBody = `${wrappedKey.toString('base64url')}.${iv.toString('base64url')}.${ciphertext.toString('base64url')}.${authTag.toString('base64url')}`;
+  const signature = crypto.sign(null, Buffer.from(signedBody), signingPrivateKey);
+  const licenseKey = `${LICENSE_PREFIX}${signedBody}.${signature.toString('base64url')}`;
 
   return {
     license_key: licenseKey,
@@ -244,34 +250,39 @@ export function createOpaqueLicense(payload = {}) {
   };
 }
 
-export function decodeLicenseKey(licenseKey, masterKey = VENDOR_MASTER_KEY) {
+export function decodeLicenseKey(licenseKey) {
   if (!licenseKey || !licenseKey.startsWith(LICENSE_PREFIX)) {
     throw new Error('Invalid license key format.');
   }
 
-  const body = licenseKey.slice(LICENSE_PREFIX.length);
-  const parts = body.split('.');
-  
-  if (parts.length !== 3 || parts.some(part => !part)) {
-    throw new Error('Invalid encrypted license key format.');
-  }
-
-  const [ivPart, ciphertextPart, tagPart] = parts;
-  const iv = Buffer.from(ivPart, 'base64url');
-  const ciphertext = Buffer.from(ciphertextPart, 'base64url');
-  const authTag = Buffer.from(tagPart, 'base64url');
-
-  if (iv.length !== LICENSE_IV_BYTES || !ciphertext.length || !authTag.length) {
-    throw new Error('Encrypted license key is malformed.');
-  }
-
+  const signingPublicKey = keyFromEnv('VENDOR_LICENSE_SIGNING_PUBLIC_KEY_B64');
+  const encryptionPrivateKey = keyFromEnv('VENDOR_LICENSE_ENCRYPTION_PRIVATE_KEY_B64');
+  if (!signingPublicKey || !encryptionPrivateKey) throw new Error('License verification and decryption keys are required.');
+  const parts = licenseKey.slice(LICENSE_PREFIX.length).split('.');
+  if (parts.length !== 5 || parts.some(part => !part)) throw new Error('Invalid encrypted license key format.');
+  if (parts.some(part => Buffer.from(part, 'base64url').toString('base64url') !== part)) throw new Error('Encrypted license key is malformed.');
+  const [wrappedKeyPart, ivPart, ciphertextPart, tagPart, signaturePart] = parts;
+  const signedBody = parts.slice(0, 4).join('.');
   try {
-    const decipher = crypto.createDecipheriv(LICENSE_CIPHER, deriveCryptoKey(masterKey), iv);
+    if (!crypto.verify(null, Buffer.from(signedBody), signingPublicKey, Buffer.from(signaturePart, 'base64url'))) {
+      throw new Error('License signature verification failed.');
+    }
+    const wrappedKey = Buffer.from(wrappedKeyPart, 'base64url');
+    const iv = Buffer.from(ivPart, 'base64url');
+    const ciphertext = Buffer.from(ciphertextPart, 'base64url');
+    const authTag = Buffer.from(tagPart, 'base64url');
+    if (!wrappedKey.length || iv.length !== LICENSE_IV_BYTES || !ciphertext.length || authTag.length !== 16) {
+      throw new Error('Encrypted license key is malformed.');
+    }
+    const sessionKey = crypto.privateDecrypt({ key: encryptionPrivateKey, oaepHash: 'sha256' }, wrappedKey);
+    const decipher = crypto.createDecipheriv(LICENSE_CIPHER, sessionKey, iv);
     decipher.setAAD(Buffer.from(LICENSE_AAD, 'utf8'));
     decipher.setAuthTag(authTag);
     const decrypted = Buffer.concat([decipher.update(ciphertext), decipher.final()]).toString('utf8');
-    return JSON.parse(decrypted);
-  } catch (error) {
-    throw new Error('License key decryption failed. Invalid key or wrong master key.');
+    const payload = JSON.parse(decrypted);
+    if (payload?.schema !== 'hrms-license-v3') throw new Error('Unsupported license schema.');
+    return payload;
+  } catch {
+    throw new Error('License key signature verification or decryption failed.');
   }
 }

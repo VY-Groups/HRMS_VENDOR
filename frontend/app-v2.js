@@ -132,9 +132,9 @@ function getSecurityLines() {
   return [
     'Vendor-side commercial registry only.',
     'No runtime dependency on the HRMS API or database.',
-    'Issued tokens are opaque encrypted HRMS2 licenses.',
+    'Issued tokens are signed, opaque encrypted HRMS3 licenses.',
     note.validation_target || 'Only the HRMS backend can validate the issued token.',
-    note.master_key_requirement || 'Configure the matching master key on both products manually.'
+    note.key_requirement || 'Configure the vendor signing key pair and HRMS encryption key pair.'
   ];
 }
 
@@ -387,7 +387,7 @@ function renderAuthShell(mode) {
             ? 'Create the first secure vendor operator, then unlock customer command, encrypted issuance, and deployment handoff workflows.'
             : 'Sign in to access the commercial registry, entitlement matrix, hardware binding intake, and secure HRMS license factory.'}</p>
           <div class="auth-badge-row">
-            <span class="hero-chip">Opaque HRMS2 Tokens</span>
+            <span class="hero-chip">Signed HRMS3 Tokens</span>
             <span class="hero-chip">Offline Validation Model</span>
             <span class="hero-chip">Vendor Data Boundary</span>
           </div>
@@ -456,6 +456,10 @@ function renderAuthShell(mode) {
                 <label class="field">
                   <span class="field-label">Confirm Login Password</span>
                   <input id="setupPasswordConfirm" class="surface-input" type="password" placeholder="Re-enter login password" required>
+                </label>
+                <label class="field">
+                  <span class="field-label">Deployment Setup Token</span>
+                  <input id="setupToken" class="surface-input" type="password" placeholder="From the deployment administrator" minlength="32" autocomplete="off" required>
                 </label>
                 <button class="primary-btn auth-submit" type="submit">Create Operator & Enter Console</button>
               </div>
@@ -1118,7 +1122,7 @@ async function previewCustomTemplate(id) {
     const data = await api('/api/templates');
     const t = (data.templates || []).find(t => t.id === id);
     if (!t) { showToast('Template not found.', 'error'); return; }
-    const sampleVars = { customer_name: 'Acme Corp', license_key: 'HRMS2-demo-key-123...', plan: 'Enterprise', expires_at: '2027-01-01', contact_name: 'John Doe' };
+    const sampleVars = { customer_name: 'Acme Corp', license_key: 'HRMS3-demo-key-123...', plan: 'Enterprise', expires_at: '2027-01-01', contact_name: 'John Doe' };
     let body = t.body;
     let subject = t.subject;
     for (const [k, v] of Object.entries(sampleVars)) {
@@ -3863,9 +3867,10 @@ async function handleSetupSubmit(event) {
   const email = document.getElementById('setupEmailStep2')?.value.trim() || document.getElementById('setupEmail')?.value.trim() || window._verifiedEmail;
   const password = document.getElementById('setupPassword').value;
   const confirm = document.getElementById('setupPasswordConfirm').value;
+  const setup_token = document.getElementById('setupToken').value;
   const smtpConfig = window._verifiedSmtpConfig || {};
 
-  if (!full_name || !email || !password) {
+  if (!full_name || !email || !password || setup_token.length < 32) {
     showToast('Complete all fields.', 'warning');
     return;
   }
@@ -3885,7 +3890,7 @@ async function handleSetupSubmit(event) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        full_name, email, password,
+        full_name, email, password, setup_token,
         smtp_host: smtpConfig.smtp_host,
         smtp_port: smtpConfig.smtp_port,
         smtp_user: smtpConfig.smtp_user,
@@ -3895,6 +3900,7 @@ async function handleSetupSubmit(event) {
     }, { auth: false, handleUnauthorized: false });
 
     setSessionToken(result.token || '');
+    document.getElementById('setupToken').value = '';
     state.authStatus = {
       ...state.authStatus,
       setup_required: false,
@@ -4835,7 +4841,7 @@ function previewTemplate(key) {
   let preview = template.body
     .replace(/\{\{customer_name\}\}/g, customer?.legal_name || 'Customer Name')
     .replace(/\{\{contact_name\}\}/g, customer?.primary_contact || 'Contact Name')
-    .replace(/\{\{license_key\}\}/g, customer?.latest_license?.license_key || 'HRMS2-XXXX-XXXX-XXXX')
+    .replace(/\{\{license_key\}\}/g, customer?.latest_license?.license_key || 'HRMS3-XXXX-XXXX-XXXX')
     .replace(/\{\{plan_name\}\}/g, customer?.plan || 'Enterprise')
     .replace(/\{\{expiry_date\}\}/g, customer?.latest_license?.expires_at ? formatDateTime(customer.latest_license.expires_at) : 'N/A')
     .replace(/\{\{days_remaining\}\}/g, '30')

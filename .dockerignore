@@ -3,6 +3,8 @@ npm-debug.log
 .env
 .env.*
 !.env.example
+backend/.env
+backend/.env.*
 .git
 .gitignore
 Dockerfile
@@ -10,3 +12,4 @@ docker-compose.yml
 .dockerignore
 data
 backend/data
+new-license.key
